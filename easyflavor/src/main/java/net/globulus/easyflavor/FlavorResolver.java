@@ -1,7 +1,6 @@
 package net.globulus.easyflavor;
 
-import android.content.Context;
-
+@FunctionalInterface
 public interface FlavorResolver {
-    String resolve(Context context);
+    String resolve();
 }

@@ -27,8 +27,7 @@ public class EasyFlavorCodeGen {
             try (EzfJavaWriter jw = new EzfJavaWriter(writer)) {
                 jw.emitPackage(packageName);
 
-                jw.emitImports("android.content.Context")
-                        .emitImports("java.lang.reflect.Proxy")
+                jw.emitImports("java.lang.reflect.Proxy")
                         .emitEmptyLine();
 
                 jw.emitJavadoc("Generated class by @%s. Do not modify this code!", className);
@@ -50,7 +49,7 @@ public class EasyFlavorCodeGen {
 
                 jw.emitAnnotation(SuppressWarnings.class, "\"unchecked\"")
                         .beginMethod("T", "get", methodModifiers,
-                                Arrays.asList("Context", "context", "Class<? super T>", "flavorableClass"), null,
+                                Arrays.asList("Class<? super T>", "flavorableClass"), null,
                                 Collections.singletonList("T"));
 
                 jw.beginControlFlow("try");

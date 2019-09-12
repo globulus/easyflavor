@@ -61,8 +61,6 @@ public class Processor extends AbstractProcessor {
 		List<TypeMirror> flavorables = new ArrayList<>();
 		List<FlavorableInterface> fis = new ArrayList<>();
 
-		ProcessorLog.note(null, "AAAAAA");
-
 		for (Element element : roundEnv.getElementsAnnotatedWith(Flavorable.class)) {
 			if (!isValidFlavorable(element)) {
 				continue;

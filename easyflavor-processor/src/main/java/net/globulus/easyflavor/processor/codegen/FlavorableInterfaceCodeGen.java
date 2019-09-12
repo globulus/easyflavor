@@ -18,7 +18,7 @@ public class FlavorableInterfaceCodeGen implements CodeGen<FlavorableInterface> 
         jw.emitStatement("%s realInstance = (%s) Class.forName(\"%s\").newInstance()",
                 interfaceType, interfaceType, implType);
         jw.emitStatement("%s flavorInstance = null", interfaceType);
-        jw.beginControlFlow("switch (resolver.resolve(context))");
+        jw.beginControlFlow("switch (resolver.resolve())");
         for (Object o : type.getFlavorEntries()) {
             Map.Entry<String, List<String>> entry = (Map.Entry<String, List<String>>) o;
             for (String flavor : entry.getValue()) {

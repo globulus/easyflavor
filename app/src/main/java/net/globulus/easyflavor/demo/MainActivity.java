@@ -14,8 +14,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        EasyFlavor.setResolver(c -> AppFlavors.get());
-        FtueManager ftueManager = EasyFlavor.get(this, FtueManager.class);
+        EasyFlavor.setResolver(AppFlavors::get);
+        FtueManager ftueManager = EasyFlavor.get(FtueManager.class);
         ftueManager.signup("email", "password", v ->
                 Log.e("CALLBACK",
                         "Callback value: " + ((v != null) ? v.toString() : "null"))
