@@ -1,6 +1,8 @@
-package net.globulus.easyflavor.demo;
+package net.globulus.easyflavor;
 
 import androidx.annotation.NonNull;
+
+import net.globulus.easyflavor.annotation.FlavorInject;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;

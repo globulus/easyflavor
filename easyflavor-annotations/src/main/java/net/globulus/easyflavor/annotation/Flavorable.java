@@ -1,4 +1,4 @@
-package net.globulus.easyflavor.demo;
+package net.globulus.easyflavor.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

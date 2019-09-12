@@ -1,0 +1,36 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+
+group='com.github.globulus'
+
+ext {
+    PUBLISH_GROUP_ID = 'net.globulus'
+    PUBLISH_ARTIFACT_ID = 'easyflavor'
+    PUBLISH_VERSION = '0.0.1'
+}
+
+android {
+    compileSdkVersion 28
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation project(path: ':easyflavor-annotations')
+    implementation project(path: ':easyflavor-processor')
+    annotationProcessor project(path: ':easyflavor-processor')
+    implementation 'androidx.annotation:annotation:1.1.0'
+}

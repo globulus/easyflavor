@@ -1,2 +1,2 @@
-include ':app'
+include ':app', ':easyflavor', ':easyflavor-processor', ':easyflavor-annotations'
 rootProject.name='EasyFlavorDemo'

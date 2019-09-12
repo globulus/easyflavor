@@ -1,6 +1,7 @@
 package net.globulus.easyflavor.demo
 
 import android.util.Log
+import net.globulus.easyflavor.annotation.FlavorInject
 
 class FtueManagerImpl : FtueManager {
     @FlavorInject

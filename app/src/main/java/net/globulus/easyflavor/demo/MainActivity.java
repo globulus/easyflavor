@@ -5,6 +5,8 @@ import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import net.globulus.easyflavor.EasyFlavor;
+
 public class MainActivity extends AppCompatActivity {
 
     @Override
@@ -12,8 +14,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        EasyFlavors.setResolver(c -> AppFlavors.get());
-        FtueManager ftueManager = EasyFlavors.get(this, FtueManager.class);
+        EasyFlavor.setResolver(c -> AppFlavors.get());
+        FtueManager ftueManager = EasyFlavor.get(this, FtueManager.class);
         ftueManager.signup("email", "password", v ->
                 Log.e("CALLBACK",
                         "Callback value: " + ((v != null) ? v.toString() : "null"))
