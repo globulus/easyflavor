@@ -1,7 +1,5 @@
 package net.globulus.easyflavor;
 
-import androidx.annotation.NonNull;
-
 import net.globulus.easyflavor.annotation.FlavorInject;
 
 import java.lang.reflect.InvocationHandler;
@@ -12,7 +10,7 @@ class FlavorInjectInvocationHandler<T> implements InvocationHandler {
     private final T realInstance;
     private final T flavorInstance;
 
-    FlavorInjectInvocationHandler(@NonNull T realInstance, T flavorInstance) {
+    FlavorInjectInvocationHandler(T realInstance, T flavorInstance) {
         this.realInstance = realInstance;
         this.flavorInstance = flavorInstance;
     }
