@@ -1,12 +1,29 @@
 apply plugin: 'java'
 apply plugin: 'com.github.dcendents.android-maven'
-
-group='com.github.globulus'
+apply plugin: 'com.jfrog.bintray'
 
 ext {
-    PUBLISH_GROUP_ID = 'net.globulus'
-    PUBLISH_ARTIFACT_ID = 'easyflavor-annotations'
-    PUBLISH_VERSION = '0.0.1'
+    bintrayRepo = 'easyflavor'
+    bintrayName = 'net.globulus.easyflavor-annotations'
+
+    publishedGroupId = 'net.globulus.easyflavor-annotations'
+    libraryName = 'EasyFlavor Annotations'
+    artifact = 'easyflavor-annotations'
+
+    libraryDescription = 'EasyFlavor annotations.'
+
+    siteUrl = 'https://github.com/globulus/easyflavor'
+    gitUrl = 'https://github.com/globulus/easyflavor.git'
+
+    libraryVersion = '1.0.0'
+
+    developerId = 'globulus'
+    developerName = 'Gordan Glavas'
+    developerEmail = 'gordan.glavas@gmail.com'
+
+    licenseName = 'The Apache Software License, Version 2.0'
+    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    allLicenses = ["Apache-2.0"]
 }
 
 dependencies {
@@ -15,3 +32,8 @@ dependencies {
 
 sourceCompatibility = "1.8"
 targetCompatibility = "1.8"
+
+if (project.rootProject.file('local.properties').exists()) {
+    apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
+    apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'
+}

@@ -12,23 +12,14 @@ The library works with **Kotlin** as well as Java, as illustrated by the [demo a
 
 ### Installation
 
-EasyFlavor is hosted on JitPack - just add the JitPack maven repo to your list of repositories, and then add the EasyFlavor dependency and annotation processor:
-
-```gradle
-allprojects {
-  repositories {
-      jcenter()
-      maven { url "https://jitpack.io" }
-   }
-}
-```
+EasyFlavor is hosted on JCenter - just add the EasyFlavor dependency and annotation processor:
 
 ```gradle
 dependencies {
-   implementation 'com.github.globulus:easyflavor:-SNAPSHOT'
-   annotationProcessor 'com.github.globulus:easyflavor-processor:-SNAPSHOT'
+   implementation 'net.globulus.easyflavor:easyflavor:1.0.0'
+   annotationProcessor 'net.globulus.easyflavor:easyflavor-processor:1.0.0'
    // and/or
-   kapt 'com.github.globulus:easyflavor-processor:-SNAPSHOT'
+   kapt 'net.globulus.easyflavor:easyflavor-processor:1.0.0'
 }
 ```
 
