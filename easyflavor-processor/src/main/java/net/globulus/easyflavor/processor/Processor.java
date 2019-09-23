@@ -3,7 +3,10 @@ package net.globulus.easyflavor.processor;
 import net.globulus.easyflavor.annotation.Flavorable;
 import net.globulus.easyflavor.annotation.Flavored;
 import net.globulus.easyflavor.processor.codegen.EasyFlavorCodeGen;
+import net.globulus.easyflavor.processor.codegen.Input;
+import net.globulus.easyflavor.processor.util.FrameworkUtil;
 import net.globulus.easyflavor.processor.util.ProcessorLog;
+import net.globulus.mmap.MergeManager;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -21,19 +24,25 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
 public class Processor extends AbstractProcessor {
 
+	private static final String NAME = "EasyFlavor";
 	private static final List<Class<? extends Annotation>> ANNOTATIONS = Arrays.asList(
 			Flavorable.class,
 			Flavored.class
 	);
 
-	private Elements mElementUtils;
 	private Types mTypeUtils;
 	private Filer mFiler;
+
+	private long mTimestamp;
+
+	private List<String> mFlavorables = new ArrayList<>();
+	private List<Element> mFlavoreds = new ArrayList<>();
+	private List<FlavorableInterface> mFis = new ArrayList<>();
+	private boolean mWroteOutput = false;
 
 	@Override
 	public synchronized void init(ProcessingEnvironment env) {
@@ -41,9 +50,10 @@ public class Processor extends AbstractProcessor {
 
 		ProcessorLog.init(env);
 
-		mElementUtils = env.getElementUtils();
 		mTypeUtils = env.getTypeUtils();
 		mFiler = env.getFiler();
+
+		mTimestamp = System.currentTimeMillis();
 	}
 
 	@Override
@@ -58,39 +68,104 @@ public class Processor extends AbstractProcessor {
 	@Override
 	@SuppressWarnings("unchecked")
 	public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-		List<TypeMirror> flavorables = new ArrayList<>();
-		List<FlavorableInterface> fis = new ArrayList<>();
+		if (mWroteOutput) {
+			return true;
+		}
+
+		Boolean shouldMerge = null;
+		boolean foundSink = false;
 
 		for (Element element : roundEnv.getElementsAnnotatedWith(Flavorable.class)) {
 			if (!isValidFlavorable(element)) {
 				continue;
 			}
-			TypeMirror type = element.asType();
-			flavorables.add(type);
-			fis.add(new FlavorableInterface(type.toString()));
+			String type = element.asType().toString();
+			mFlavorables.add(type);
+			mFis.add(new FlavorableInterface(type));
+
+			Flavorable annotation = element.getAnnotation(Flavorable.class);
+			if (annotation.origin()) {
+				shouldMerge = false;
+			} else if (shouldMerge == null) {
+				shouldMerge = true;
+			}
 		}
 
 		for (Element element : roundEnv.getElementsAnnotatedWith(Flavored.class)) {
-			TypeMirror flavorableType = isValidFlavored(element, flavorables);
-			if (flavorableType == null) {
+			if (!isValidFlavoredElement(element)) {
 				continue;
 			}
-			String flavorableClass = flavorableType.toString();
+			Flavored annotation = element.getAnnotation(Flavored.class);
+			if (annotation.sink()) {
+				foundSink = true;
+			}
+			mFlavoreds.add(element);
+		}
+
+		final boolean shouldMergeResolution = shouldMerge != null && shouldMerge || foundSink;
+		Input input = new Input(mFlavorables, mFis);
+		ProcessorLog.warn(null, "should merge " + shouldMergeResolution);
+		MergeManager<Input> mergeManager = new MergeManager<Input>(mFiler, mTimestamp,
+				FrameworkUtil.PACKAGE_NAME, NAME,
+				() -> shouldMergeResolution)
+				.setProcessorLog(new net.globulus.mmap.ProcessorLog() {
+					@Override
+					public void note(Element element, String s, Object... objects) {
+						ProcessorLog.note(element, s, objects);
+					}
+
+					@Override
+					public void warn(Element element, String s, Object... objects) {
+						ProcessorLog.warn(element, s, objects);
+					}
+
+					@Override
+					public void error(Element element, String s, Object... objects) {
+						ProcessorLog.error(element, s, objects);
+					}
+				});
+		ProcessorLog.warn(null, "BEFORE MERGE 1");
+		input = mergeManager.manageMerging(input);
+		ProcessorLog.warn(null, "AFTER MERGE 1");
+
+		try {
+			Thread.sleep(50); // create pause between two merges
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		for (Element element : mFlavoreds) {
+			String flavorableClass = getFlavorableSupertype(element, input.flavorables);
+			if (flavorableClass == null) {
+				continue;
+			}
+			ProcessorLog.warn(element, "Found flavorable class " + flavorableClass);
 			FlavorableInterface fi = null;
-			for (FlavorableInterface f : fis) {
+			for (FlavorableInterface f : input.fis) {
+				ProcessorLog.warn(null, "Found mFis class " + f.flavorMap);
 				if (f.flavorableClass.equals(flavorableClass)) {
 					fi = f;
 					break;
 				}
 			}
-			String[] flavors = element.getAnnotation(Flavored.class).flavors();
+			Flavored annotation = element.getAnnotation(Flavored.class);
+			String[] flavors = annotation.flavors();
 			if (flavors.length == 0) {
 				ProcessorLog.error(element, "flavors array cannot be empty!");
 				return false;
 			}
 			fi.addFlavors(element.asType().toString(), flavors);
 		}
-		new EasyFlavorCodeGen().generate(mFiler, fis);
+
+		if (foundSink) {
+			ProcessorLog.warn(null, "WRITING OUTPUT");
+			new EasyFlavorCodeGen().generate(mFiler, input);
+			mWroteOutput = true;
+		} else {
+			ProcessorLog.warn(null, "BEFORE MERGE 2");
+			mergeManager.manageMerging(input);
+			ProcessorLog.warn(null, "AFTER MERGE 2");
+		}
 		return true;
 	}
 
@@ -113,62 +188,38 @@ public class Processor extends AbstractProcessor {
 		}
 	}
 
-	private TypeMirror isValidFlavored(Element element, List<TypeMirror> flavorables) {
+	private boolean isValidFlavoredElement(Element element) {
 		if (element.getKind() == ElementKind.CLASS) {
 			if (element.getModifiers().contains(Modifier.PRIVATE)) {
 				ProcessorLog.error(element, "The private class %s is annotated with @%s. "
 								+ "Private classes are not supported because of lacking visibility.",
 						element.getSimpleName(), Flavored.class.getSimpleName());
-				return null;
+				return false;
 			} else {
-				for (TypeMirror superType : mTypeUtils.directSupertypes(element.asType())) {
-					for (TypeMirror flavorable : flavorables) {
-						if (flavorable.equals(superType)) {
-							return flavorable;
-						}
-					}
-				}
-				ProcessorLog.error(element,
-						"Element %s does not extend a %s type.",
-						element.getSimpleName(), Flavorable.class.getSimpleName(),
-						Flavored.class.getSimpleName());
-				return null;
+				return true;
 			}
 		} else {
 			ProcessorLog.error(element,
 					"Element %s is annotated with @%s but is not a class. Only classes are supported.",
 					element.getSimpleName(), Flavored.class.getSimpleName());
-			return null;
+			return false;
 		}
 	}
 
-	private Modifier mapToJavax(Element element, int modifier) {
-		switch (modifier) {
-			case java.lang.reflect.Modifier.ABSTRACT:
-				return Modifier.ABSTRACT;
-			case java.lang.reflect.Modifier.PUBLIC:
-				return Modifier.PUBLIC;
-			case java.lang.reflect.Modifier.PRIVATE:
-				return Modifier.PRIVATE;
-			case java.lang.reflect.Modifier.PROTECTED:
-				return Modifier.PROTECTED;
-			case java.lang.reflect.Modifier.FINAL:
-				return Modifier.FINAL;
-			case java.lang.reflect.Modifier.STATIC:
-				return Modifier.STATIC;
-			case java.lang.reflect.Modifier.TRANSIENT:
-				return Modifier.TRANSIENT;
-			case java.lang.reflect.Modifier.VOLATILE:
-				return Modifier.VOLATILE;
-			case java.lang.reflect.Modifier.SYNCHRONIZED:
-				return Modifier.SYNCHRONIZED;
-			case java.lang.reflect.Modifier.STRICT:
-				return Modifier.STRICTFP;
-			case java.lang.reflect.Modifier.NATIVE:
-				return Modifier.NATIVE;
-			default:
-				ProcessorLog.error(element, "Wrong modifier used: " + modifier);
-				return null;
+	private String getFlavorableSupertype(Element element, List<String> flavorables) {
+		ProcessorLog.warn(element, "AAAA "  + flavorables.size());
+		for (TypeMirror superType : mTypeUtils.directSupertypes(element.asType())) {
+			for (String flavorable : flavorables) {
+				ProcessorLog.warn(element, "AAAA "  + flavorable);
+				if (flavorable.equals(superType.toString())) {
+					return flavorable;
+				}
+			}
 		}
+		ProcessorLog.error(element,
+				"Element %s does not extend the %s type.",
+				element.getSimpleName(), Flavorable.class.getSimpleName(),
+				Flavored.class.getSimpleName());
+		return null;
 	}
 }

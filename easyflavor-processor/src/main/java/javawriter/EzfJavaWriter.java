@@ -704,6 +704,23 @@ public class EzfJavaWriter implements Closeable {
     return endControlFlow(null);
   }
 
+  public EzfJavaWriter beginStaticBlock() throws IOException {
+    indent();
+    out.write("static {\n");
+    scopes.push(Scope.STATIC_BLOCK);
+    return this;
+  }
+
+  public EzfJavaWriter endStaticBlock() throws IOException {
+    Scope popped = scopes.pop();
+    if (popped != Scope.STATIC_BLOCK) {
+      throw new IllegalStateException();
+    }
+    indent();
+    out.write("}\n");
+    return this;
+  }
+
   public EzfJavaWriter emitCase(String arg) throws IOException {
     indent();
     out.write("case ");
@@ -851,7 +868,7 @@ public class EzfJavaWriter implements Closeable {
 
   private static final EnumSet<Scope>
       METHOD_SCOPES = EnumSet.of(Scope.NON_ABSTRACT_METHOD, Scope.CONSTRUCTOR, Scope.CONTROL_FLOW,
-      Scope.INITIALIZER);
+      Scope.INITIALIZER, Scope.STATIC_BLOCK);
 
   private void checkInMethod() {
     if (!METHOD_SCOPES.contains(scopes.peekFirst())) {
@@ -874,6 +891,7 @@ public class EzfJavaWriter implements Closeable {
     CONTROL_FLOW,
     ANNOTATION_ATTRIBUTE,
     ANNOTATION_ARRAY_VALUE,
-    INITIALIZER
+    INITIALIZER,
+    STATIC_BLOCK
   }
 }

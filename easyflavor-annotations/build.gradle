@@ -4,9 +4,9 @@ apply plugin: 'com.jfrog.bintray'
 
 ext {
     bintrayRepo = 'easyflavor'
-    bintrayName = 'net.globulus.easyflavor-annotations'
+    bintrayName = 'net.globulus.easyflavor'
 
-    publishedGroupId = 'net.globulus.easyflavor-annotations'
+    publishedGroupId = 'net.globulus.easyflavor'
     libraryName = 'EasyFlavor Annotations'
     artifact = 'easyflavor-annotations'
 

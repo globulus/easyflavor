@@ -1,4 +1,4 @@
-package net.globulus.easyflavor.demo
+package net.globulus.easyflavor.demolib
 
 interface Callback {
     fun handle(value: Any?)

@@ -7,7 +7,6 @@ import java.io.Writer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.List;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
@@ -17,10 +16,10 @@ import javawriter.EzfJavaWriter;
 
 public class EasyFlavorCodeGen {
 
-    public void generate(Filer filer, List<FlavorableInterface> input) {
+    public void generate(Filer filer, Input input) {
         try {
             String packageName = FrameworkUtil.PACKAGE_NAME;
-            String className = "EasyFlavor";
+            String className = "EasyFlavorProxyResolver";
 
             JavaFileObject jfo = filer.createSourceFile(packageName + "." + className);
             Writer writer = jfo.openWriter();
@@ -31,24 +30,32 @@ public class EasyFlavorCodeGen {
                         .emitEmptyLine();
 
                 jw.emitJavadoc("Generated class by @%s. Do not modify this code!", className);
-                jw.beginType(className, "class", EnumSet.of(Modifier.PUBLIC, Modifier.FINAL), null)
+                jw.beginType(className, "class", EnumSet.of(Modifier.FINAL),
+                        null, "ProxyResolver")
                         .emitEmptyLine();
 
                 jw.emitField("FlavorResolver", "resolver", EnumSet.of(Modifier.PRIVATE, Modifier.STATIC))
+                        .emitEmptyLine();
+
+                jw.beginStaticBlock()
+                        .emitStatement("EasyFlavor.setProxyResolver(new %s())", className)
+                        .endStaticBlock()
                         .emitEmptyLine();
 
                 jw.beginConstructor(EnumSet.of(Modifier.PRIVATE))
                         .endConstructor()
                         .emitEmptyLine();
 
-                EnumSet<Modifier> methodModifiers = EnumSet.of(Modifier.PUBLIC, Modifier.STATIC);
-                jw.beginMethod("void", "setResolver", methodModifiers, "FlavorResolver", "r")
+                jw.emitAnnotation(Override.class)
+                        .beginMethod("void", "setResolver", EnumSet.of(Modifier.PUBLIC),
+                        "FlavorResolver", "r")
                         .emitStatement("resolver = r")
                         .endMethod()
                         .emitEmptyLine();
 
                 jw.emitAnnotation(SuppressWarnings.class, "\"unchecked\"")
-                        .beginMethod("T", "get", methodModifiers,
+                        .emitAnnotation(Override.class)
+                        .beginMethod("T", "get", EnumSet.of(Modifier.PUBLIC),
                                 Arrays.asList("Class<? super T>", "flavorableClass"), null,
                                 Collections.singletonList("T"));
 
@@ -57,7 +64,7 @@ public class EasyFlavorCodeGen {
                 boolean first = true;
                 String classEqualsFormat = "%s.class.equals(flavorableClass)";
                 FlavorableInterfaceCodeGen fiCodeGen = new FlavorableInterfaceCodeGen();
-                for (FlavorableInterface fi : input) {
+                for (FlavorableInterface fi : input.fis) {
                     String classEquals = String.format(classEqualsFormat, fi.flavorableClass);
                     if (first) {
                         first = false;
@@ -82,4 +89,5 @@ public class EasyFlavorCodeGen {
             e.printStackTrace();
         }
     }
+
 }

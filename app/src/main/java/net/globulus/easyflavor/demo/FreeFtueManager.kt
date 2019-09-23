@@ -2,6 +2,8 @@ package net.globulus.easyflavor.demo
 
 import android.util.Log
 import net.globulus.easyflavor.annotation.Flavored
+import net.globulus.easyflavor.demolib.Callback
+import net.globulus.easyflavor.demolib.FtueManager
 
 @Flavored(flavors = [AppFlavors.FREE])
 class FreeFtueManager : FtueManager {

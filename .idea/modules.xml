@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/EasyFlavorDemo.iml" filepath="$PROJECT_DIR$/EasyFlavorDemo.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/demolib/demolib.iml" filepath="$PROJECT_DIR$/demolib/demolib.iml" />
       <module fileurl="file://$PROJECT_DIR$/easyflavor/easyflavor.iml" filepath="$PROJECT_DIR$/easyflavor/easyflavor.iml" />
       <module fileurl="file://$PROJECT_DIR$/easyflavor-annotations/easyflavor-annotations.iml" filepath="$PROJECT_DIR$/easyflavor-annotations/easyflavor-annotations.iml" />
       <module fileurl="file://$PROJECT_DIR$/easyflavor-processor/easyflavor-processor.iml" filepath="$PROJECT_DIR$/easyflavor-processor/easyflavor-processor.iml" />

@@ -1,12 +1,13 @@
 package net.globulus.easyflavor.processor;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class FlavorableInterface {
+public class FlavorableInterface implements Serializable {
 
     public final String flavorableClass;
     final Map<String, List<String>> flavorMap = new HashMap<>();

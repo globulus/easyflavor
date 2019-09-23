@@ -1,4 +1,4 @@
-package net.globulus.easyflavor.demo
+package net.globulus.easyflavor.demolib
 
 import android.util.Log
 import net.globulus.easyflavor.annotation.FlavorInject
