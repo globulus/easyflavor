@@ -8,6 +8,8 @@ import net.globulus.easyflavor.processor.util.FrameworkUtil;
 import net.globulus.easyflavor.processor.util.ProcessorLog;
 import net.globulus.mmap.MergeManager;
 import net.globulus.mmap.MergeSession;
+import net.globulus.mmap.Sink;
+import net.globulus.mmap.Source;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -73,8 +75,8 @@ public class Processor extends AbstractProcessor {
 			return true;
 		}
 
-		boolean shouldMerge = true;
-		boolean foundSink = false;
+		boolean shouldMerge = roundEnv.getElementsAnnotatedWith(Source.class).isEmpty();
+		boolean foundSink = !roundEnv.getElementsAnnotatedWith(Sink.class).isEmpty();
 
 		for (Element element : roundEnv.getElementsAnnotatedWith(Flavorable.class)) {
 			if (!isValidFlavorable(element)) {
@@ -83,20 +85,11 @@ public class Processor extends AbstractProcessor {
 			String type = element.asType().toString();
 			mFlavorables.add(type);
 			mFis.add(new FlavorableInterface(type));
-
-			Flavorable annotation = element.getAnnotation(Flavorable.class);
-			if (annotation.origin()) {
-				shouldMerge = false;
-			}
 		}
 
 		for (Element element : roundEnv.getElementsAnnotatedWith(Flavored.class)) {
 			if (!isValidFlavoredElement(element)) {
 				continue;
-			}
-			Flavored annotation = element.getAnnotation(Flavored.class);
-			if (annotation.sink()) {
-				foundSink = true;
 			}
 			mFlavoreds.add(element);
 		}
