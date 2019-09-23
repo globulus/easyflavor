@@ -15,7 +15,7 @@ public class Input implements MergeInput<Input> {
     public Input(List<String> flavorables, List<FlavorableInterface> fis) {
         ProcessorLog.warn(null, "MY FlAVOR " + flavorables.size());
         for (String t : flavorables) {
-            ProcessorLog.warn(null, "MY FlAVOR " + t);
+            ProcessorLog.warn(null, "MY FLAVOR " + t);
         }
         ProcessorLog.warn(null, "MY fis " + fis.size());
         this.flavorables = flavorables;

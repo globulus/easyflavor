@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import net.globulus.easyflavor.EasyFlavor;
 import net.globulus.easyflavor.demolib.FtueManager;
+import net.globulus.easyflavor.demomidlib.AppFlavors;
 
 public class MainActivity extends AppCompatActivity {
 

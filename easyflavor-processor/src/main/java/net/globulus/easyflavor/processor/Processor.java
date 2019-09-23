@@ -7,6 +7,7 @@ import net.globulus.easyflavor.processor.codegen.Input;
 import net.globulus.easyflavor.processor.util.FrameworkUtil;
 import net.globulus.easyflavor.processor.util.ProcessorLog;
 import net.globulus.mmap.MergeManager;
+import net.globulus.mmap.MergeSession;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -72,7 +73,7 @@ public class Processor extends AbstractProcessor {
 			return true;
 		}
 
-		Boolean shouldMerge = null;
+		boolean shouldMerge = true;
 		boolean foundSink = false;
 
 		for (Element element : roundEnv.getElementsAnnotatedWith(Flavorable.class)) {
@@ -86,8 +87,6 @@ public class Processor extends AbstractProcessor {
 			Flavorable annotation = element.getAnnotation(Flavorable.class);
 			if (annotation.origin()) {
 				shouldMerge = false;
-			} else if (shouldMerge == null) {
-				shouldMerge = true;
 			}
 		}
 
@@ -102,7 +101,7 @@ public class Processor extends AbstractProcessor {
 			mFlavoreds.add(element);
 		}
 
-		final boolean shouldMergeResolution = shouldMerge != null && shouldMerge || foundSink;
+		final boolean shouldMergeResolution = shouldMerge;
 		Input input = new Input(mFlavorables, mFis);
 		ProcessorLog.warn(null, "should merge " + shouldMergeResolution);
 		MergeManager<Input> mergeManager = new MergeManager<Input>(mFiler, mTimestamp,
@@ -124,15 +123,10 @@ public class Processor extends AbstractProcessor {
 						ProcessorLog.error(element, s, objects);
 					}
 				});
+		MergeSession<Input> mergeSession = mergeManager.newSession();
 		ProcessorLog.warn(null, "BEFORE MERGE 1");
-		input = mergeManager.manageMerging(input);
+		input = mergeSession.mergeInput(input);
 		ProcessorLog.warn(null, "AFTER MERGE 1");
-
-		try {
-			Thread.sleep(50); // create pause between two merges
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
 
 		for (Element element : mFlavoreds) {
 			String flavorableClass = getFlavorableSupertype(element, input.flavorables);
@@ -163,7 +157,7 @@ public class Processor extends AbstractProcessor {
 			mWroteOutput = true;
 		} else {
 			ProcessorLog.warn(null, "BEFORE MERGE 2");
-			mergeManager.manageMerging(input);
+			mergeSession.writeMergeFiles(input);
 			ProcessorLog.warn(null, "AFTER MERGE 2");
 		}
 		return true;

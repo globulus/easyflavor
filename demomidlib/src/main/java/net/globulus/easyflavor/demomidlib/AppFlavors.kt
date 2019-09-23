@@ -1,4 +1,4 @@
-package net.globulus.easyflavor.demo
+package net.globulus.easyflavor.demomidlib
 
 object AppFlavors {
     const val FREE = "free"
