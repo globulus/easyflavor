@@ -15,7 +15,7 @@ ext {
     siteUrl = 'https://github.com/globulus/easyflavor'
     gitUrl = 'https://github.com/globulus/easyflavor.git'
 
-    libraryVersion = '1.0.2'
+    libraryVersion = '1.0.3'
 
     developerId = 'globulus'
     developerName = 'Gordan Glavas'

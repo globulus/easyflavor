@@ -195,11 +195,15 @@ public class Processor extends AbstractProcessor {
 
 	private String getFlavorableSupertype(Element element, List<String> flavorables) {
 //		ProcessorLog.warn(element, "AAAA "  + flavorables.size());
-		for (TypeMirror superType : mTypeUtils.directSupertypes(element.asType())) {
-			for (String flavorable : flavorables) {
+		for (TypeMirror directSuperType : mTypeUtils.directSupertypes(element.asType())) {
+			List<TypeMirror> allSuperTypes = new ArrayList<>(mTypeUtils.directSupertypes(directSuperType));
+			allSuperTypes.add(directSuperType);
+			for (TypeMirror superType : allSuperTypes) {
+				for (String flavorable : flavorables) {
 //				ProcessorLog.warn(element, "AAAA "  + flavorable);
-				if (flavorable.equals(superType.toString())) {
-					return flavorable;
+					if (flavorable.equals(superType.toString())) {
+						return flavorable;
+					}
 				}
 			}
 		}
