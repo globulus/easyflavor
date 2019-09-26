@@ -29,11 +29,6 @@ public class FlavorableInterfaceCodeGen implements CodeGen<FlavorableInterface> 
             jw.emitStatement("break");
         }
         jw.endControlFlow();
-        jw.emitStatement("return (T) Proxy.newProxyInstance(\n" +
-                "                        EasyFlavor.class.getClassLoader(),\n" +
-                "                        new Class[] { %s.class },\n" +
-                "                        new FlavorInjectInvocationHandler<>(realInstance, flavorInstance)\n" +
-                ")",
-                interfaceType);
+        jw.emitStatement("return (T) EasyFlavorProxyFactory.createProxy(%s.class, realInstance, flavorInstance)", interfaceType);
     }
 }

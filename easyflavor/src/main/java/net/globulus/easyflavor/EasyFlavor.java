@@ -18,7 +18,7 @@ public final class EasyFlavor {
         proxyResolver.setResolver(r);
     }
 
-    public static  <T> T get(Class<? super T> flavorableClass) {
+    public static <T> T get(Class<? super T> flavorableClass) {
         return proxyResolver.get(flavorableClass);
     }
 

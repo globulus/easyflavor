@@ -70,7 +70,8 @@ public class EasyFlavorCodeGen {
                     jw.endControlFlow();
                 }
 
-                jw.nextControlFlow("catch (ClassNotFoundException | IllegalAccessException | InstantiationException e)")
+                jw.nextControlFlow("catch (ClassNotFoundException | IllegalAccessException" +
+                        " | InstantiationException e)")
                         .emitStatement("e.printStackTrace()")
                         .endControlFlow();
 
