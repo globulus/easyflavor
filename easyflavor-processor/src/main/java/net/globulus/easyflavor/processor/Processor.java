@@ -96,40 +96,40 @@ public class Processor extends AbstractProcessor {
 
 		final boolean shouldMergeResolution = shouldMerge;
 		Input input = new Input(mFlavorables, mFis);
-		ProcessorLog.warn(null, "should merge " + shouldMergeResolution);
+//		ProcessorLog.warn(null, "should merge " + shouldMergeResolution);
 		MergeManager<Input> mergeManager = new MergeManager<Input>(mFiler, mTimestamp,
 				FrameworkUtil.PACKAGE_NAME, NAME,
 				() -> shouldMergeResolution)
 				.setProcessorLog(new net.globulus.mmap.ProcessorLog() {
 					@Override
 					public void note(Element element, String s, Object... objects) {
-						ProcessorLog.note(element, s, objects);
+//						ProcessorLog.note(element, s, objects);
 					}
 
 					@Override
 					public void warn(Element element, String s, Object... objects) {
-						ProcessorLog.warn(element, s, objects);
+//						ProcessorLog.warn(element, s, objects);
 					}
 
 					@Override
 					public void error(Element element, String s, Object... objects) {
-						ProcessorLog.error(element, s, objects);
+//						ProcessorLog.error(element, s, objects);
 					}
 				});
 		MergeSession<Input> mergeSession = mergeManager.newSession();
-		ProcessorLog.warn(null, "BEFORE MERGE 1");
+//		ProcessorLog.warn(null, "BEFORE MERGE 1");
 		input = mergeSession.mergeInput(input);
-		ProcessorLog.warn(null, "AFTER MERGE 1");
+//		ProcessorLog.warn(null, "AFTER MERGE 1");
 
 		for (Element element : mFlavoreds) {
 			String flavorableClass = getFlavorableSupertype(element, input.flavorables);
 			if (flavorableClass == null) {
 				continue;
 			}
-			ProcessorLog.warn(element, "Found flavorable class " + flavorableClass);
+//			ProcessorLog.warn(element, "Found flavorable class " + flavorableClass);
 			FlavorableInterface fi = null;
 			for (FlavorableInterface f : input.fis) {
-				ProcessorLog.warn(null, "Found mFis class " + f.flavorMap);
+//				ProcessorLog.warn(null, "Found mFis class " + f.flavorMap);
 				if (f.flavorableClass.equals(flavorableClass)) {
 					fi = f;
 					break;
@@ -145,13 +145,13 @@ public class Processor extends AbstractProcessor {
 		}
 
 		if (foundSink) {
-			ProcessorLog.warn(null, "WRITING OUTPUT");
+//			ProcessorLog.warn(null, "WRITING OUTPUT");
 			new EasyFlavorCodeGen().generate(mFiler, input);
 			mWroteOutput = true;
 		} else {
-			ProcessorLog.warn(null, "BEFORE MERGE 2");
+//			ProcessorLog.warn(null, "BEFORE MERGE 2");
 			mergeSession.writeMergeFiles(input);
-			ProcessorLog.warn(null, "AFTER MERGE 2");
+//			ProcessorLog.warn(null, "AFTER MERGE 2");
 		}
 		return true;
 	}
@@ -194,10 +194,10 @@ public class Processor extends AbstractProcessor {
 	}
 
 	private String getFlavorableSupertype(Element element, List<String> flavorables) {
-		ProcessorLog.warn(element, "AAAA "  + flavorables.size());
+//		ProcessorLog.warn(element, "AAAA "  + flavorables.size());
 		for (TypeMirror superType : mTypeUtils.directSupertypes(element.asType())) {
 			for (String flavorable : flavorables) {
-				ProcessorLog.warn(element, "AAAA "  + flavorable);
+//				ProcessorLog.warn(element, "AAAA "  + flavorable);
 				if (flavorable.equals(superType.toString())) {
 					return flavorable;
 				}

@@ -15,7 +15,7 @@ ext {
     siteUrl = 'https://github.com/globulus/easyflavor'
     gitUrl = 'https://github.com/globulus/easyflavor.git'
 
-    libraryVersion = '1.0.0'
+    libraryVersion = '1.0.2'
 
     developerId = 'globulus'
     developerName = 'Gordan Glavas'
@@ -29,7 +29,7 @@ ext {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(path: ':easyflavor-annotations')
-    compile 'net.globulus.mmap:mmap:1.0.0'
+    compile 'net.globulus.mmap:mmap:1.0.1'
 }
 
 sourceCompatibility = "1.8"

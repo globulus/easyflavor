@@ -13,19 +13,19 @@ public class Input implements MergeInput<Input> {
     public final List<FlavorableInterface> fis;
 
     public Input(List<String> flavorables, List<FlavorableInterface> fis) {
-        ProcessorLog.warn(null, "MY FlAVOR " + flavorables.size());
-        for (String t : flavorables) {
-            ProcessorLog.warn(null, "MY FLAVOR " + t);
-        }
-        ProcessorLog.warn(null, "MY fis " + fis.size());
+//        ProcessorLog.warn(null, "MY FlAVOR " + flavorables.size());
+//        for (String t : flavorables) {
+//            ProcessorLog.warn(null, "MY FLAVOR " + t);
+//        }
+//        ProcessorLog.warn(null, "MY fis " + fis.size());
         this.flavorables = flavorables;
         this.fis = fis;
     }
 
     @Override
     public Input mergedUp(Input other) {
-        ProcessorLog.warn(null, "AAAA " + other.flavorables.size());
-        ProcessorLog.warn(null, "VVVV " + other.fis.size());
+//        ProcessorLog.warn(null, "AAAA " + other.flavorables.size());
+//        ProcessorLog.warn(null, "VVVV " + other.fis.size());
         List<String> flavorables = new ArrayList<>(other.flavorables);
         flavorables.addAll(this.flavorables);
         List<FlavorableInterface> fis = new ArrayList<>(other.fis);

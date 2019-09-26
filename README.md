@@ -10,17 +10,19 @@ The architecture enforced by the library fits neatly into popular options, such 
 
 The library works with **Kotlin** as well as Java, as illustrated by the [demo app](app/).
 
+EasyFlavor uses [MMAP](https://github.com/globulus/mmap) to allow for multi-module annoation processing.
+
 ### Installation
 
 EasyFlavor is hosted on JCenter - just add the EasyFlavor dependency and annotation processor:
 
 ```gradle
 dependencies {
-   implementation 'net.globulus.easyflavor:easyflavor:1.0.0'
-   implementation 'net.globulus.easyflavor-annotations:easyflavor-annotations:1.0.0'
-   annotationProcessor 'net.globulus.easyflavor-processor:easyflavor-processor:1.0.0'
+   implementation 'net.globulus.easyflavor:easyflavor:1.0.2'
+   implementation 'net.globulus.easyflavor:easyflavor-annotations:1.0.2'
+   annotationProcessor 'net.globulus.easyflavor:easyflavor-processor:1.0.2'
    // and/or
-   kapt 'net.globulus.easyflavor-processor:easyflavor-processor:1.0.0'
+   kapt 'net.globulus.easyflavor:easyflavor-processor:1.0.2'
 }
 ```
 
@@ -104,6 +106,18 @@ class MainActivity extends Activity {
 ```
 
 6. PROFIT! Whenever any annotated method of the ViewModel is invoked, EasyFlavor will **inject the flavor-specific ViewModel code before or after the common one**.
+
+### Multi-module support
+
+EasyFlavor supports hierarchical modules, meaning that it can [generate the final code based on multiple layers of modules](https://github.com/globulus/mmap), from top-level libraries all the way down to the app itself.
+
+Because of this, it's **necessary to do the following**:
+
+1. Annotate one class (just one, any one) in your *topmost* module with *@Source*.
+2. Annoate one class (again, just one) in your *bottommost* module(s) with *@Sink*.
+
+That's it! These annotations will tell the processor how's your architecture oriented and allow it to generate all of its files so that no conflicts arise.
+
 
 ### Notes
 

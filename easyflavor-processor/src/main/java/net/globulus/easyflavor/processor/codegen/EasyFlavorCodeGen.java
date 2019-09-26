@@ -61,17 +61,11 @@ public class EasyFlavorCodeGen {
 
                 jw.beginControlFlow("try");
 
-                boolean first = true;
                 String classEqualsFormat = "%s.class.equals(flavorableClass)";
                 FlavorableInterfaceCodeGen fiCodeGen = new FlavorableInterfaceCodeGen();
                 for (FlavorableInterface fi : input.fis) {
                     String classEquals = String.format(classEqualsFormat, fi.flavorableClass);
-                    if (first) {
-                        first = false;
-                        jw.beginControlFlow("if (%s)", classEquals);
-                    } else {
-                        jw.nextControlFlow("else if (%s)", classEquals);
-                    }
+                    jw.beginControlFlow("if (%s)", classEquals);
                     fiCodeGen.generateCode(fi, jw);
                     jw.endControlFlow();
                 }
