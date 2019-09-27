@@ -4,7 +4,7 @@ import net.globulus.easyflavor.annotation.Flavorable
 import net.globulus.mmap.Source
 
 @Source
-@Flavorable
+@Flavorable(proxied = true)
 interface FtueManager {
     fun signup(email: String, password: String, callback: Callback?)
 }

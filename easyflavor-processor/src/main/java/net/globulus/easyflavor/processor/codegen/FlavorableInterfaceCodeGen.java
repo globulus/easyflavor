@@ -14,9 +14,6 @@ public class FlavorableInterfaceCodeGen implements CodeGen<FlavorableInterface> 
     @SuppressWarnings("unchecked")
     public void generateCode(FlavorableInterface type, EzfJavaWriter jw) throws IOException {
         String interfaceType = type.flavorableClass;
-        String implType = interfaceType + "Impl";
-        jw.emitStatement("%s realInstance = (%s) Class.forName(\"%s\").newInstance()",
-                interfaceType, interfaceType, implType);
         jw.emitStatement("%s flavorInstance = null", interfaceType);
         jw.beginControlFlow("switch (resolver.resolve())");
         for (Object o : type.getFlavorEntries()) {
@@ -29,11 +26,19 @@ public class FlavorableInterfaceCodeGen implements CodeGen<FlavorableInterface> 
             jw.emitStatement("break");
         }
         jw.endControlFlow();
-        jw.emitStatement("return (T) Proxy.newProxyInstance(\n" +
-                "                        EasyFlavor.class.getClassLoader(),\n" +
-                "                        new Class[] { %s.class },\n" +
-                "                        new FlavorInjectInvocationHandler<>(realInstance, flavorInstance)\n" +
-                ")",
-                interfaceType);
+
+        if (type.proxied) {
+            String implType = interfaceType + "Impl";
+            jw.emitStatement("%s realInstance = (%s) Class.forName(\"%s\").newInstance()",
+                    interfaceType, interfaceType, implType);
+            jw.emitStatement("return (T) Proxy.newProxyInstance(\n" +
+                            "                        EasyFlavor.class.getClassLoader(),\n" +
+                            "                        new Class[] { %s.class },\n" +
+                            "                        new FlavorInjectInvocationHandler<>(realInstance, flavorInstance)\n" +
+                            ")",
+                    interfaceType);
+        } else {
+            jw.emitStatement("return (T) flavorInstance");
+        }
     }
 }

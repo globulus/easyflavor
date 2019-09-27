@@ -12,6 +12,10 @@ public @interface FlavorInject {
     Mode mode() default Mode.AFTER;
 
     enum Mode {
-        BEFORE, AFTER
+        BEFORE, AFTER, BEFORE_SUPER, AFTER_SUPER;
+
+        public boolean isSuper() {
+            return this == BEFORE_SUPER || this == AFTER_SUPER;
+        }
     }
 }

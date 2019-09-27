@@ -82,9 +82,10 @@ public class Processor extends AbstractProcessor {
 			if (!isValidFlavorable(element)) {
 				continue;
 			}
+			Flavorable annotation = element.getAnnotation(Flavorable.class);
 			String type = element.asType().toString();
 			mFlavorables.add(type);
-			mFis.add(new FlavorableInterface(type));
+			mFis.add(new FlavorableInterface(type, annotation.proxied()));
 		}
 
 		for (Element element : roundEnv.getElementsAnnotatedWith(Flavored.class)) {
