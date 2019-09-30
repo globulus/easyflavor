@@ -27,7 +27,7 @@ import javax.lang.model.element.Modifier;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 
 /** A utility class which aids in generating Java source files. */
-public class EzfJavaWriter implements Closeable {
+public class EzfWriter implements Closeable {
   private static final Pattern TYPE_PATTERN = Pattern.compile("(?:[\\w$]+\\.)*([\\w\\.*$]+)");
   private static final int MAX_SINGLE_LINE_ATTRIBUTES = 3;
   private static final String INDENT = "  ";
@@ -45,7 +45,7 @@ public class EzfJavaWriter implements Closeable {
   /**
    * @param out the stream to which Java source will be written. This should be a buffered stream.
    */
-  public EzfJavaWriter(Writer out) {
+  public EzfWriter(Writer out) {
     this.out = out;
   }
 
@@ -66,7 +66,7 @@ public class EzfJavaWriter implements Closeable {
   }
 
   /** Emit a package declaration and empty line. */
-  public EzfJavaWriter emitPackage(String packageName) throws IOException {
+  public EzfWriter emitPackage(String packageName) throws IOException {
     if (this.packagePrefix != null) {
       throw new IllegalStateException();
     }
@@ -85,7 +85,7 @@ public class EzfJavaWriter implements Closeable {
    * Emit an import for each {@code type} provided. For the duration of the file, all references to
    * these classes will be automatically shortened.
    */
-  public EzfJavaWriter emitImports(String... types) throws IOException {
+  public EzfWriter emitImports(String... types) throws IOException {
     return emitImports(Arrays.asList(types));
   }
 
@@ -93,7 +93,7 @@ public class EzfJavaWriter implements Closeable {
    * Emit an import for each {@code type} provided. For the duration of the file, all references to
    * these classes will be automatically shortened.
    */
-  public EzfJavaWriter emitImports(Class<?>... types) throws IOException {
+  public EzfWriter emitImports(Class<?>... types) throws IOException {
     List<String> classNames = new ArrayList<String>(types.length);
     for (Class<?> classToImport : types) {
       classNames.add(classToImport.getName());
@@ -105,7 +105,7 @@ public class EzfJavaWriter implements Closeable {
    * Emit an import for each {@code type} in the provided {@code Collection}. For the duration of
    * the file, all references to these classes will be automatically shortened.
    */
-  public EzfJavaWriter emitImports(Collection<String> types) throws IOException {
+  public EzfWriter emitImports(Collection<String> types) throws IOException {
     for (String type : new TreeSet<String>(types)) {
       Matcher matcher = TYPE_PATTERN.matcher(type);
       if (!matcher.matches()) {
@@ -125,7 +125,7 @@ public class EzfJavaWriter implements Closeable {
    * Emit a static import for each {@code type} provided. For the duration of the file,
    * all references to these classes will be automatically shortened.
    */
-  public EzfJavaWriter emitStaticImports(String... types) throws IOException {
+  public EzfWriter emitStaticImports(String... types) throws IOException {
     return emitStaticImports(Arrays.asList(types));
   }
 
@@ -133,7 +133,7 @@ public class EzfJavaWriter implements Closeable {
    * Emit a static import for each {@code type} in the provided {@code Collection}. For the
    * duration of the file, all references to these classes will be automatically shortened.
    */
-  public EzfJavaWriter emitStaticImports(Collection<String> types) throws IOException {
+  public EzfWriter emitStaticImports(Collection<String> types) throws IOException {
     for (String type : new TreeSet<String>(types)) {
       Matcher matcher = TYPE_PATTERN.matcher(type);
       if (!matcher.matches()) {
@@ -154,7 +154,7 @@ public class EzfJavaWriter implements Closeable {
    * compressing it with imports if possible. Type compression will only be enabled if
    * {@link #isCompressingTypes} is true.
    */
-  private EzfJavaWriter emitCompressedType(String type) throws IOException {
+  private EzfWriter emitCompressedType(String type) throws IOException {
     if (isCompressingTypes) {
       out.write(compressType(type));
     } else {
@@ -232,7 +232,7 @@ public class EzfJavaWriter implements Closeable {
    *
    * @param isStatic true if it should be an static initializer, false for an instance initializer.
    */
-  public EzfJavaWriter beginInitializer(boolean isStatic) throws IOException {
+  public EzfWriter beginInitializer(boolean isStatic) throws IOException {
     indent();
     if (isStatic) {
       out.write("static");
@@ -245,7 +245,7 @@ public class EzfJavaWriter implements Closeable {
   }
 
   /** Ends the current initializer declaration. */
-  public EzfJavaWriter endInitializer() throws IOException {
+  public EzfWriter endInitializer() throws IOException {
     popScope(Scope.INITIALIZER);
     indent();
     out.write("}\n");
@@ -257,7 +257,7 @@ public class EzfJavaWriter implements Closeable {
   *
   * @param kind such as "class", "interface" or "enum".
   */
-  public EzfJavaWriter beginType(String type, String kind) throws IOException {
+  public EzfWriter beginType(String type, String kind) throws IOException {
     return beginType(type, kind, EnumSet.noneOf(Modifier.class), null);
   }
 
@@ -266,7 +266,7 @@ public class EzfJavaWriter implements Closeable {
    *
    * @param kind such as "class", "interface" or "enum".
    */
-  public EzfJavaWriter beginType(String type, String kind, Set<Modifier> modifiers)
+  public EzfWriter beginType(String type, String kind, Set<Modifier> modifiers)
       throws IOException {
     return beginType(type, kind, modifiers, null);
   }
@@ -277,8 +277,8 @@ public class EzfJavaWriter implements Closeable {
    * @param kind such as "class", "interface" or "enum".
    * @param extendsType the class to extend, or null for no extends clause.
    */
-  public EzfJavaWriter beginType(String type, String kind, Set<Modifier> modifiers, String extendsType,
-                                 String... implementsTypes) throws IOException {
+  public EzfWriter beginType(String type, String kind, Set<Modifier> modifiers, String extendsType,
+                             String... implementsTypes) throws IOException {
     indent();
     emitModifiers(modifiers);
     out.write(kind);
@@ -306,7 +306,7 @@ public class EzfJavaWriter implements Closeable {
   }
 
   /** Completes the current type declaration. */
-  public EzfJavaWriter endType() throws IOException {
+  public EzfWriter endType() throws IOException {
     popScope(Scope.TYPE_DECLARATION, Scope.INTERFACE_DECLARATION);
     types.pop();
     indent();
@@ -315,19 +315,19 @@ public class EzfJavaWriter implements Closeable {
   }
 
   /** Emits a field declaration. */
-  public EzfJavaWriter emitField(String type, String name) throws IOException {
+  public EzfWriter emitField(String type, String name) throws IOException {
     return emitField(type, name, EnumSet.noneOf(Modifier.class), null);
   }
 
   /** Emits a field declaration. */
-  public EzfJavaWriter emitField(String type, String name, Set<Modifier> modifiers)
+  public EzfWriter emitField(String type, String name, Set<Modifier> modifiers)
       throws IOException {
     return emitField(type, name, modifiers, null);
   }
 
   /** Emits a field declaration. */
-  public EzfJavaWriter emitField(String type, String name, Set<Modifier> modifiers,
-                                 String initialValue) throws IOException {
+  public EzfWriter emitField(String type, String name, Set<Modifier> modifiers,
+                             String initialValue) throws IOException {
     indent();
     emitModifiers(modifiers);
     emitCompressedType(type);
@@ -364,8 +364,8 @@ public class EzfJavaWriter implements Closeable {
    * @param modifiers the set of modifiers to be applied to the method
    * @param parameters alternating parameter types and names.
    */
-  public EzfJavaWriter beginMethod(String returnType, String name, Set<Modifier> modifiers,
-                                   String... parameters) throws IOException {
+  public EzfWriter beginMethod(String returnType, String name, Set<Modifier> modifiers,
+                               String... parameters) throws IOException {
     return beginMethod(returnType, name, modifiers, Arrays.asList(parameters), null, null);
   }
 
@@ -382,9 +382,9 @@ public class EzfJavaWriter implements Closeable {
    * @param parameters alternating parameter types and names.
    * @param throwsTypes the classes to throw, or null for no throws clause.
    */
-  public EzfJavaWriter beginMethod(String returnType, String name, Set<Modifier> modifiers,
-                                   List<String> parameters, List<String> throwsTypes,
-                                   List<String> genericTypes) throws IOException {
+  public EzfWriter beginMethod(String returnType, String name, Set<Modifier> modifiers,
+                               List<String> parameters, List<String> throwsTypes,
+                               List<String> genericTypes) throws IOException {
     indent();
     emitModifiers(modifiers);
     if (genericTypes != null) {
@@ -432,21 +432,21 @@ public class EzfJavaWriter implements Closeable {
     return this;
   }
 
-  public EzfJavaWriter beginConstructor(Set<Modifier> modifiers, String... parameters)
+  public EzfWriter beginConstructor(Set<Modifier> modifiers, String... parameters)
       throws IOException {
     beginMethod(null, rawType(types.peekFirst()), modifiers, parameters);
     return this;
   }
 
-  public EzfJavaWriter beginConstructor(Set<Modifier> modifiers,
-                                        List<String> parameters, List<String> throwsTypes)
+  public EzfWriter beginConstructor(Set<Modifier> modifiers,
+                                    List<String> parameters, List<String> throwsTypes)
       throws IOException {
     beginMethod(null, rawType(types.peekFirst()), modifiers, parameters, throwsTypes, null);
     return this;
   }
 
   /** Emits some Javadoc comments with line separated by {@code \n}. */
-  public EzfJavaWriter emitJavadoc(String javadoc, Object... params) throws IOException {
+  public EzfWriter emitJavadoc(String javadoc, Object... params) throws IOException {
     String formatted = String.format(javadoc, params);
 
     indent();
@@ -466,7 +466,7 @@ public class EzfJavaWriter implements Closeable {
   }
 
   /** Emits a single line comment. */
-  public EzfJavaWriter emitSingleLineComment(String comment, Object... args) throws IOException {
+  public EzfWriter emitSingleLineComment(String comment, Object... args) throws IOException {
     indent();
     out.write("// ");
     out.write(String.format(comment, args));
@@ -474,12 +474,12 @@ public class EzfJavaWriter implements Closeable {
     return this;
   }
 
-  public EzfJavaWriter emitEmptyLine() throws IOException {
+  public EzfWriter emitEmptyLine() throws IOException {
     out.write("\n");
     return this;
   }
 
-  public EzfJavaWriter emitEnumValue(String name) throws IOException {
+  public EzfWriter emitEnumValue(String name) throws IOException {
     indent();
     out.write(name);
     out.write(",\n");
@@ -490,11 +490,11 @@ public class EzfJavaWriter implements Closeable {
    * A simple switch to emit the proper enum depending if its last causing it to be terminated
    * by a semi-colon ({@code ;}).
    */
-  public EzfJavaWriter emitEnumValue(String name, boolean isLast) throws IOException {
+  public EzfWriter emitEnumValue(String name, boolean isLast) throws IOException {
     return isLast ? emitLastEnumValue(name) : emitEnumValue(name);
   }
 
-  private EzfJavaWriter emitLastEnumValue(String name) throws IOException {
+  private EzfWriter emitLastEnumValue(String name) throws IOException {
     indent();
     out.write(name);
     out.write(";\n");
@@ -502,7 +502,7 @@ public class EzfJavaWriter implements Closeable {
   }
 
   /** Emit a list of enum values followed by a semi-colon ({@code ;}). */
-  public EzfJavaWriter emitEnumValues(Iterable<String> names) throws IOException {
+  public EzfWriter emitEnumValues(Iterable<String> names) throws IOException {
     Iterator<String> iterator = names.iterator();
 
     while (iterator.hasNext()) {
@@ -518,12 +518,12 @@ public class EzfJavaWriter implements Closeable {
   }
 
   /** Equivalent to {@code annotation(annotation, emptyMap())}. */
-  public EzfJavaWriter emitAnnotation(String annotation) throws IOException {
+  public EzfWriter emitAnnotation(String annotation) throws IOException {
     return emitAnnotation(annotation, Collections.<String, Object>emptyMap());
   }
 
   /** Equivalent to {@code annotation(annotationType.getName(), emptyMap())}. */
-  public EzfJavaWriter emitAnnotation(Class<? extends Annotation> annotationType) throws IOException {
+  public EzfWriter emitAnnotation(Class<? extends Annotation> annotationType) throws IOException {
     return emitAnnotation(type(annotationType), Collections.<String, Object>emptyMap());
   }
 
@@ -534,7 +534,7 @@ public class EzfJavaWriter implements Closeable {
    *     be encoded using Object.toString(); use {@link #stringLiteral} for String values. Object
    *     arrays are written one element per line.
    */
-  public EzfJavaWriter emitAnnotation(Class<? extends Annotation> annotationType, Object value)
+  public EzfWriter emitAnnotation(Class<? extends Annotation> annotationType, Object value)
       throws IOException {
     return emitAnnotation(type(annotationType), value);
   }
@@ -546,7 +546,7 @@ public class EzfJavaWriter implements Closeable {
    *     be encoded using Object.toString(); use {@link #stringLiteral} for String values. Object
    *     arrays are written one element per line.
    */
-  public EzfJavaWriter emitAnnotation(String annotation, Object value) throws IOException {
+  public EzfWriter emitAnnotation(String annotation, Object value) throws IOException {
     indent();
     out.write("@");
     emitCompressedType(annotation);
@@ -558,8 +558,8 @@ public class EzfJavaWriter implements Closeable {
   }
 
   /** Equivalent to {@code annotation(annotationType.getName(), attributes)}. */
-  public EzfJavaWriter emitAnnotation(Class<? extends Annotation> annotationType,
-                                      Map<String, ?> attributes) throws IOException {
+  public EzfWriter emitAnnotation(Class<? extends Annotation> annotationType,
+                                  Map<String, ?> attributes) throws IOException {
     return emitAnnotation(type(annotationType), attributes);
   }
 
@@ -570,7 +570,7 @@ public class EzfJavaWriter implements Closeable {
    *     using Object.toString(); use {@link #stringLiteral} for String values. Object arrays are
    *     written one element per line.
    */
-  public EzfJavaWriter emitAnnotation(String annotation, Map<String, ?> attributes)
+  public EzfWriter emitAnnotation(String annotation, Map<String, ?> attributes)
       throws IOException {
     indent();
     out.write("@");
@@ -630,7 +630,7 @@ public class EzfJavaWriter implements Closeable {
    * Writes a single annotation value. If the value is an array, each element in the array will be
    * written to its own line.
    */
-  private EzfJavaWriter emitAnnotationValue(Object value) throws IOException {
+  private EzfWriter emitAnnotationValue(Object value) throws IOException {
     if (value instanceof Object[]) {
       out.write("{");
       boolean firstValue = true;
@@ -659,7 +659,7 @@ public class EzfJavaWriter implements Closeable {
    * @param pattern a code pattern like "int i = %s". Newlines will be further indented. Should not
    *     contain trailing semicolon.
    */
-  public EzfJavaWriter emitStatement(String pattern, Object... args) throws IOException {
+  public EzfWriter emitStatement(String pattern, Object... args) throws IOException {
     checkInMethod();
     String[] lines = String.format(pattern, args).split("\n", -1);
     indent();
@@ -677,7 +677,7 @@ public class EzfJavaWriter implements Closeable {
    * @param controlFlow the control flow construct and its code, such as "if (foo == 5)". Shouldn't
    *     contain braces or newline characters.
    */
-  public EzfJavaWriter beginControlFlow(String controlFlow, Object... args) throws IOException {
+  public EzfWriter beginControlFlow(String controlFlow, Object... args) throws IOException {
     checkInMethod();
     indent();
     out.write(String.format(controlFlow, args));
@@ -690,7 +690,7 @@ public class EzfJavaWriter implements Closeable {
    * @param controlFlow the control flow construct and its code, such as "else if (foo == 10)".
    *     Shouldn't contain braces or newline characters.
    */
-  public EzfJavaWriter nextControlFlow(String controlFlow, Object... args) throws IOException {
+  public EzfWriter nextControlFlow(String controlFlow, Object... args) throws IOException {
     popScope(Scope.CONTROL_FLOW);
     indent();
     scopes.push(Scope.CONTROL_FLOW);
@@ -700,18 +700,18 @@ public class EzfJavaWriter implements Closeable {
     return this;
   }
 
-  public EzfJavaWriter endControlFlow() throws IOException {
+  public EzfWriter endControlFlow() throws IOException {
     return endControlFlow(null);
   }
 
-  public EzfJavaWriter beginStaticBlock() throws IOException {
+  public EzfWriter beginStaticBlock() throws IOException {
     indent();
     out.write("static {\n");
     scopes.push(Scope.STATIC_BLOCK);
     return this;
   }
 
-  public EzfJavaWriter endStaticBlock() throws IOException {
+  public EzfWriter endStaticBlock() throws IOException {
     Scope popped = scopes.pop();
     if (popped != Scope.STATIC_BLOCK) {
       throw new IllegalStateException();
@@ -721,7 +721,7 @@ public class EzfJavaWriter implements Closeable {
     return this;
   }
 
-  public EzfJavaWriter emitCase(String arg) throws IOException {
+  public EzfWriter emitCase(String arg) throws IOException {
     indent();
     out.write("case ");
     out.write(arg);
@@ -733,7 +733,7 @@ public class EzfJavaWriter implements Closeable {
    * @param controlFlow the optional control flow construct and its code, such as
    *     "while(foo == 20)". Only used for "do/while" control flows.
    */
-  public EzfJavaWriter endControlFlow(String controlFlow, Object... args) throws IOException {
+  public EzfWriter endControlFlow(String controlFlow, Object... args) throws IOException {
     popScope(Scope.CONTROL_FLOW);
     indent();
     if (controlFlow != null) {
@@ -747,7 +747,7 @@ public class EzfJavaWriter implements Closeable {
   }
 
   /** Completes the current method declaration. */
-  public EzfJavaWriter endMethod() throws IOException {
+  public EzfWriter endMethod() throws IOException {
     Scope popped = scopes.pop();
     // support calling a constructor a "method" to support the legacy code
     if (popped == Scope.NON_ABSTRACT_METHOD || popped == Scope.CONSTRUCTOR) {
@@ -760,7 +760,7 @@ public class EzfJavaWriter implements Closeable {
   }
 
   /** Completes the current constructor declaration. */
-  public EzfJavaWriter endConstructor() throws IOException {
+  public EzfWriter endConstructor() throws IOException {
     popScope(Scope.CONSTRUCTOR);
     indent();
     out.write("}\n");

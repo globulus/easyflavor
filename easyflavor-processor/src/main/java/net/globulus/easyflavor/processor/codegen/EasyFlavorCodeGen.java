@@ -12,7 +12,7 @@ import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
 import javax.tools.JavaFileObject;
 
-import javawriter.EzfJavaWriter;
+import javawriter.EzfWriter;
 
 public class EasyFlavorCodeGen {
 
@@ -23,13 +23,13 @@ public class EasyFlavorCodeGen {
 
             JavaFileObject jfo = filer.createSourceFile(packageName + "." + className);
             Writer writer = jfo.openWriter();
-            try (EzfJavaWriter jw = new EzfJavaWriter(writer)) {
+            try (EzfWriter jw = new EzfWriter(writer)) {
                 jw.emitPackage(packageName);
 
 //                jw.emitImports("java.lang.reflect.Proxy")
 //                        .emitEmptyLine();
 
-                jw.emitJavadoc("Generated class by @%s. Do not modify this code!", className);
+                jw.emitJavadoc("Generated class by EasyFlavor. Do not modify this code!");
                 jw.beginType(className, "class", EnumSet.of(Modifier.FINAL),
                         null, "ProxyResolver")
                         .emitEmptyLine();
@@ -50,6 +50,12 @@ public class EasyFlavorCodeGen {
                         .beginMethod("void", "setResolver", EnumSet.of(Modifier.PUBLIC),
                         "FlavorResolver", "r")
                         .emitStatement("resolver = r")
+                        .endMethod()
+                        .emitEmptyLine();
+
+                jw.emitAnnotation(Override.class)
+                        .beginMethod("FlavorResolver", "getResolver", EnumSet.of(Modifier.PUBLIC))
+                        .emitStatement("return resolver")
                         .endMethod()
                         .emitEmptyLine();
 

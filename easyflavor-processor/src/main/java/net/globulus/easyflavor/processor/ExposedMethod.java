@@ -78,7 +78,9 @@ public class ExposedMethod implements Serializable {
     }
 
     boolean isNamedLike(ExposedMethod other) {
-        return name.toLowerCase().contains(other.name.toLowerCase());
+        String thisName = name.toLowerCase();
+        String otherName = other.name.toLowerCase();
+        return thisName.startsWith(otherName) || thisName.endsWith(otherName);
     }
 
     private String mapPrimitiveToBoxed(String type) {

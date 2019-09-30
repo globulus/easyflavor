@@ -7,13 +7,13 @@ import net.globulus.easyflavor.processor.FlavorableInterface;
 import java.io.IOException;
 import java.util.Map;
 
-import javawriter.EzfJavaWriter;
+import javawriter.EzfWriter;
 
 public class FlavorableInterfaceCodeGen implements CodeGen<FlavorableInterface> {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void generateCode(FlavorableInterface type, EzfJavaWriter jw) throws IOException {
+    public void generateCode(FlavorableInterface type, EzfWriter jw) throws IOException {
         String interfaceType = type.flavorableClass.name;
         jw.emitStatement("%s flavorInstance = null", interfaceType);
         jw.beginControlFlow("switch (resolver.resolve())");
@@ -40,7 +40,7 @@ public class FlavorableInterfaceCodeGen implements CodeGen<FlavorableInterface> 
 //        }
     }
 
-    private void writeConstructors(ExposedClass exposedClass, EzfJavaWriter jw) throws IOException {
+    private void writeConstructors(ExposedClass exposedClass, EzfWriter jw) throws IOException {
         String name = exposedClass.name;
         boolean first = true;
         ExposedMethod emptyConstr = null;

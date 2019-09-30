@@ -10,7 +10,7 @@ The architecture enforced by the library fits neatly into popular options, such 
 
 The library works with **Kotlin** as well as Java, as illustrated by the [demo app](app/).
 
-EasyFlavor uses [MMAP](https://github.com/globulus/mmap) to allow for multi-module annoation processing.
+EasyFlavor uses [MMAP](https://github.com/globulus/mmap) to allow for multi-module annotation processing. It relies purely on generated code, and not reflection, meaning that there's no performance overhead is introduced.
 
 ### Installation
 
@@ -28,27 +28,9 @@ dependencies {
 
 ### How to use
 
-1. Create an interface for the part of code that depends on flavors, and *annotate it with* **@Flavorable**. E.g, here's an interface describing a View Model of a MainActivity:
+#### Define app flavors
 
-```java
-@Flavorable
-interface MainActivityViewModel {
-    void fetchData(String collection, Callback callback);
-}
-```
-
-2. Provide a common-code implementation of the interface. **Its name must be the same as that of the interface + Impl.** Annotate those methods that depend on flavors with **@FlavorInject**. Use **mode** to tell if the flavor injected code is supposed to be executed *before* or *after* the common code (default is after):
-
-```java
-class MainActivityViewModelImpl implements MainActivityViewModel {
-    @FlavorInject(mode = FlavorInject.Mode.BEFORE)
-    void fetchData(String collection, Callback callback) {
-         Log.e(this.getClass().getSimpleName(), "Common code called");
-    }
-}
-```
-
-3. Define your app flavors and tell EasyFlavor how to resolve which flavor the app is running:
+Define your app flavors and tell *EasyFlavor* how to resolve which flavor the app is running:
 
 ```java
 class MyApp extends Application {
@@ -67,7 +49,20 @@ class MyApp extends Application {
 }
 ```
 
-4. Provide flavor-specific implementations of the interface. Annotate them with **@Flavored**, providing an array of flavors as Strings for which this implementation is valid:
+#### Designate a *Flavorable* type
+
+For the part of code that depends on flavors, create a class or an interface and *annotate it with* **@Flavorable**. E.g, here's an interface describing a View Model of a MainActivity:
+
+```java
+@Flavorable
+class MainActivityViewModel {
+    void fetchData(String collection, Callback callback);
+}
+```
+
+#### Option #1 - Add a *Flavored* subclass/implementation
+
+Provide flavor-specific implementations of the interface. Annotate them with **@Flavored**, providing an array of flavors as Strings for which this implementation is valid:
 
 ```java
 @Flavored(flavors = {MyApp.FREE})
@@ -91,7 +86,40 @@ class FullMainActivityViewModel implements MainActivityViewModel {
 }
 ```
 
-5. When instantiating the View Model, use **EasyFlavor.get(CLASS)** instead of instantiating manually:
+#### Option #2 - *FlavorInject* methods directly
+
+You may also specify methods in your *Flavorable* class that are replaced, prefixed or suffixed by other methods, depening on the app Flavor.
+
+1. Annotate those methods with **@FlavorInject**, optionally specifying the execution mode (*before*, *after*, or by default *replace*).
+
+2. Annotate flavor-specific methods with **@Flavored**, also providing an array of flavors. **The names of flavored methods must contain the name of its FlavorInject counterpart at either beginning or end**.
+
+```java
+@Flavorable
+class FtueManager {
+    
+    @FlavorInject(mode = FlavorInject.Mode.BEFORE)
+    void fetchData(String collection, Callback callback) {
+         Log.e(this.getClass().getSimpleName(), "Common code called");
+    }
+    
+    @Flavored(flavors = {MyApp.FULL})
+    void fullFetchData(String collection, Callback callback) {
+         Log.e(this.getClass().getSimpleName(), "Full version fetch data");
+    }
+    
+    @Flavored(flavors = {MyApp.FREE})
+    void freeFetchData(String collection, Callback callback) {
+         Log.e(this.getClass().getSimpleName(), "Free version fetch data");
+    }
+}
+```
+
+*EasyFlavor* will generate a subclasses of your *Flavorable* that have the flavors-specific code injected into *FlavorInject* methods based on rules described above.
+
+#### Obtain flavored instances
+
+When instantiating the Flavorable, use **EasyFlavor.get(CLASS, ARGS...)** instead of instantiating manually:
 ```java
 class MainActivity extends Activity {
     
@@ -105,7 +133,36 @@ class MainActivity extends Activity {
 }
 ```
 
-6. PROFIT! Whenever any annotated method of the ViewModel is invoked, EasyFlavor will **inject the flavor-specific ViewModel code before or after the common one**.
+For classes and generated subclasses, *EasyFlavor* **automatically resolves constructors based on types and length of the passed argument list**:
+
+```java
+@Flavorable
+class FtueManager {
+    
+    public FtueManager(String mode) {
+        ...
+    }
+    
+    public FtueManager(String mode, String tag) {
+        ...
+    }
+}
+
+...
+
+class MainActivity extends Activity {
+    
+    private FtueManager ftueManager;
+    
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        ...
+        ftueManager = EasyFlavor.get(MainActivityViewModel.class, "mode", "tag");
+    }
+}
+```
+
+Note that primitive types in constructors aren't allowed given that the args list is an array of Object. For Kotlin, this isn't an issue as the processor will automatically wrap primitive types
 
 ### Multi-module support
 
@@ -113,8 +170,8 @@ EasyFlavor supports hierarchical modules, meaning that it can [generate the fina
 
 Because of this, it's **necessary to do the following**:
 
-1. Annotate one class (just one, any one) in your *topmost* module with *@Source*.
-2. Annoate one class (again, just one) in your *bottommost* module(s) with *@Sink*.
+1. Annotate one class (just one, any one) in your *topmost* module with *@EasyFlavorConfig(source = true)*.
+2. Annoate one class (again, just one) in your *bottommost* module(s) with *@EasyFlavorConfig(sink = true)*.
 
 That's it! These annotations will tell the processor how's your architecture oriented and allow it to generate all of its files so that no conflicts arise.
 
@@ -136,35 +193,5 @@ class ViewModelModule {
    fun provideMainActivityViewModel() = EasyFlavor.get(MainActivityViewModel::class.java)
 }
 ```
-* An obvious drawback to EasyFlavor DI is that it only supports *parameter-less constructors*, which in itself may not be an issue at all.
-
-* EasyFlavor can be used with abstract classes, and not just interfaces:
-```kotlin
-@Flavorable
-interface Test {
-    fun test()
-}
-
-open class TestImpl : Test {
-    @FlavorInject override fun test() {
-        Log.e("Test", "Original test")
-    }
-}
-
-@Flavored(flavors = [AppFlavors.FREE])
-class FreeTest : TestImpl() {
-    override fun test() {
-        Log.e("Test", "Free test")
-    }
-}
-
-@Flavored(flavors = [AppFlavors.FULL])
-class FullTest : TestImpl() {
-    override fun test() {
-        Log.e("Test", "Full test")
-    }
-}
-```
-
 
 * If you're using EasyFlavor with multiple modules, it may be necessary to clean your project and recompile if the processor begins to complain that a certain class isn't a subtype of a *Flavorable* class.

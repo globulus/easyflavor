@@ -13,7 +13,7 @@ import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
 import javax.tools.JavaFileObject;
 
-import javawriter.EzfJavaWriter;
+import javawriter.EzfWriter;
 
 public class FlavoredSubclassCodeGen {
 
@@ -26,7 +26,7 @@ public class FlavoredSubclassCodeGen {
 
             JavaFileObject jfo = filer.createSourceFile(packageName + "." + className);
             Writer writer = jfo.openWriter();
-            try (EzfJavaWriter jw = new EzfJavaWriter(writer)) {
+            try (EzfWriter jw = new EzfWriter(writer)) {
                 jw.emitPackage(packageName);
 
 //                jw.emitImports("java.lang.reflect.Proxy")
