@@ -8,7 +8,7 @@ The architecture enforced by the library fits neatly into popular options, such 
 
 **EasyFlavor** uses no Android dependencies so it's shipped as a Java library, meaning that it can be used in pure Java and Android projects alike.
 
-The library works with **Kotlin** as well as Java, as illustrated by the [demo app](app/).
+The library works with **Kotlin** as well as Java, as illustrated by the [demo app](app/). It also has the ability to generate additional [Kotlin extensions code](#kotlin-extensions).
 
 EasyFlavor uses [MMAP](https://github.com/globulus/mmap) to allow for multi-module annotation processing. It relies purely on generated code, and not reflection, meaning that there's no performance overhead is introduced.
 
@@ -18,11 +18,11 @@ EasyFlavor is hosted on JCenter - just add the EasyFlavor dependency and annotat
 
 ```gradle
 dependencies {
-   implementation 'net.globulus.easyflavor:easyflavor:1.0.3'
-   implementation 'net.globulus.easyflavor:easyflavor-annotations:1.0.3'
-   annotationProcessor 'net.globulus.easyflavor:easyflavor-processor:1.0.3'
+   implementation 'net.globulus.easyflavor:easyflavor:1.0.4'
+   implementation 'net.globulus.easyflavor:easyflavor-annotations:1.0.4'
+   annotationProcessor 'net.globulus.easyflavor:easyflavor-processor:1.0.4'
    // and/or
-   kapt 'net.globulus.easyflavor:easyflavor-processor:1.0.3'
+   kapt 'net.globulus.easyflavor:easyflavor-processor:1.0.4'
 }
 ```
 
@@ -195,3 +195,75 @@ class ViewModelModule {
 ```
 
 * If you're using EasyFlavor with multiple modules, it may be necessary to clean your project and recompile if the processor begins to complain that a certain class isn't a subtype of a *Flavorable* class.
+
+### Kotlin extensions
+
+EasyFlavor's processor can generate a Kotlin file containing functions that make it easy to run a certain block of code based on a Flavor (or multiple of them). E.g, here's what this file looks like if you have two flavors in your app, "Free" and "Full":
+
+```kotlin
+public fun <T> runIf(flavors: Array<String>, block: () -> T): T? {
+  if (flavors.contains(EasyFlavor.getResolver().resolve())) {
+    return block()
+  }
+  return null
+}
+
+public fun <T> runUnless(flavors: Array<String>, block: () -> T): T? {
+  if (!flavors.contains(EasyFlavor.getResolver().resolve())) {
+    return block()
+  }
+  return null
+}
+
+public fun <T> runIfFree(block: () -> T): T? {
+  if (EasyFlavor.getResolver().resolve() == "free") {
+    return block()
+  }
+  return null
+}
+
+public fun <T> runUnlessFree(block: () -> T): T? {
+  if (EasyFlavor.getResolver().resolve() != "free") {
+    return block()
+  }
+  return null
+}
+
+public fun <T> runIfFull(block: () -> T): T? {
+  if (EasyFlavor.getResolver().resolve() == "full") {
+    return block()
+  }
+  return null
+}
+
+public fun <T> runUnlessFull(block: () -> T): T? {
+  if (EasyFlavor.getResolver().resolve() != "full") {
+    return block()
+  }
+  return null
+}
+```
+
+Then, you can do something like this:
+
+```kotlin
+class SomeClass {
+    fun someMethod() {
+        // Do something
+        runIfFree {
+            // Do something only if current flavor is free
+        }
+        // Do something else
+    }
+}
+```
+
+To enable this feature, annotate one class per block with **@EasyFlavorConfig** and provide a module name to the *kotlinExtModule* param:
+
+```kotlin
+@EasyFlavorConfig(kotlinExtModule = "MyModule")
+class SomeClassInModule
+```
+
+Specifying unique names for your modules allows you to use these functions from all your modules, regardless of their hierarchy. Omitting the module will make it so that Kotlin files aren't generated (if, e.g, you only use Java in your project).
+

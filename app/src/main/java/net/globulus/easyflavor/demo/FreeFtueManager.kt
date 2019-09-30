@@ -6,9 +6,9 @@ import net.globulus.easyflavor.annotation.Flavored
 import net.globulus.easyflavor.demolib.Callback
 import net.globulus.easyflavor.demolib.FtueManager
 import net.globulus.easyflavor.demomidlib.AppFlavors
-import net.globulus.easyflavor.runFree
+import net.globulus.easyflavor.runIfFree
 
-@EasyFlavorConfig(sink = true, kotlinExt = true)
+@EasyFlavorConfig(sink = true, kotlinExtModule = "Demo")
 @Flavored(flavors = [AppFlavors.FREE])
 class FreeFtueManager : FtueManager {
     override fun signup(email: String, password: String, callback: Callback?) {
@@ -16,8 +16,8 @@ class FreeFtueManager : FtueManager {
         Log.e(tag, "Free called $email $password")
         callback?.handle(tag)
 
-        runFree {
-            Log.e(tag, "RUNNING FULL")
+        runIfFree {
+            Log.e(tag, "RUNNING FREE")
         }
     }
 }

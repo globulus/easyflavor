@@ -85,7 +85,7 @@ public class Processor extends AbstractProcessor {
 
 		Boolean shouldMerge = null;
 		Boolean foundSink = null;
-		Boolean kotlinExt = null;
+		String kotlinExtModule = null;
 		for (Element element : roundEnv.getElementsAnnotatedWith(EasyFlavorConfig.class)) {
 			EasyFlavorConfig annotation = element.getAnnotation(EasyFlavorConfig.class);
 			if (annotation.source() && shouldMerge == null) {
@@ -94,8 +94,8 @@ public class Processor extends AbstractProcessor {
 			if (annotation.sink() && foundSink == null) {
 				foundSink = true;
 			}
-			if (annotation.kotlinExt() && kotlinExt == null) {
-				kotlinExt = true;
+			if (!annotation.kotlinExtModule().isEmpty()) {
+				kotlinExtModule = annotation.kotlinExtModule();
 			}
 		}
 
@@ -181,6 +181,10 @@ public class Processor extends AbstractProcessor {
 					flavors);
 		}
 
+		if (kotlinExtModule != null) {
+			new KotlinExtCodeGen(kotlinExtModule).generate(mFiler, input);
+		}
+
 		if (foundSink != null) {
 //			ProcessorLog.warn(null, "WRITING OUTPUT");
 			FlavoredSubclassCodeGen flavoredSubclassCodeGen = new FlavoredSubclassCodeGen();
@@ -191,10 +195,6 @@ public class Processor extends AbstractProcessor {
 				}
 			}
 			new EasyFlavorCodeGen().generate(mFiler, input);
-
-			if (kotlinExt != null) {
-				new KotlinExtCodeGen().generate(mFiler, input);
-			}
 			mWroteOutput = true;
 		} else {
 //			ProcessorLog.warn(null, "BEFORE MERGE 2");
