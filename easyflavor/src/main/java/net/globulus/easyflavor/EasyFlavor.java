@@ -18,8 +18,9 @@ public final class EasyFlavor {
         proxyResolver.setResolver(r);
     }
 
-    public static  <T> T get(Class<? super T> flavorableClass) {
-        return proxyResolver.get(flavorableClass);
+    @SuppressWarnings("unchecked")
+    public static  <T> T get(Class<? super T> flavorableClass, Object... args) {
+        return proxyResolver.get(flavorableClass, args);
     }
 
     static void setProxyResolver(ProxyResolver r) {

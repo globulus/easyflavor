@@ -26,8 +26,8 @@ public class EasyFlavorCodeGen {
             try (EzfJavaWriter jw = new EzfJavaWriter(writer)) {
                 jw.emitPackage(packageName);
 
-                jw.emitImports("java.lang.reflect.Proxy")
-                        .emitEmptyLine();
+//                jw.emitImports("java.lang.reflect.Proxy")
+//                        .emitEmptyLine();
 
                 jw.emitJavadoc("Generated class by @%s. Do not modify this code!", className);
                 jw.beginType(className, "class", EnumSet.of(Modifier.FINAL),
@@ -56,23 +56,23 @@ public class EasyFlavorCodeGen {
                 jw.emitAnnotation(SuppressWarnings.class, "\"unchecked\"")
                         .emitAnnotation(Override.class)
                         .beginMethod("T", "get", EnumSet.of(Modifier.PUBLIC),
-                                Arrays.asList("Class<? super T>", "flavorableClass"), null,
-                                Collections.singletonList("T"));
+                                Arrays.asList("Class<? super T>", "flavorableClass", "Object...", "args"),
+                                null, Collections.singletonList("T"));
 
-                jw.beginControlFlow("try");
+//                jw.beginControlFlow("try");
 
                 String classEqualsFormat = "%s.class.equals(flavorableClass)";
                 FlavorableInterfaceCodeGen fiCodeGen = new FlavorableInterfaceCodeGen();
                 for (FlavorableInterface fi : input.fis) {
-                    String classEquals = String.format(classEqualsFormat, fi.flavorableClass);
+                    String classEquals = String.format(classEqualsFormat, fi.flavorableClass.name);
                     jw.beginControlFlow("if (%s)", classEquals);
                     fiCodeGen.generateCode(fi, jw);
                     jw.endControlFlow();
                 }
 
-                jw.nextControlFlow("catch (ClassNotFoundException | IllegalAccessException | InstantiationException e)")
-                        .emitStatement("e.printStackTrace()")
-                        .endControlFlow();
+//                jw.nextControlFlow("catch (ClassNotFoundException | IllegalAccessException | InstantiationException e)")
+//                        .emitStatement("e.printStackTrace()")
+//                        .endControlFlow();
 
                 jw.emitStatement("throw new IllegalArgumentException(\"Unable to find flavors for class: \" + flavorableClass)")
                         .endMethod();

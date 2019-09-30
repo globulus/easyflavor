@@ -1,21 +1,26 @@
 package net.globulus.easyflavor.processor;
 
+import net.globulus.easyflavor.annotation.EasyFlavorConfig;
+import net.globulus.easyflavor.annotation.FlavorInject;
 import net.globulus.easyflavor.annotation.Flavorable;
 import net.globulus.easyflavor.annotation.Flavored;
 import net.globulus.easyflavor.processor.codegen.EasyFlavorCodeGen;
+import net.globulus.easyflavor.processor.codegen.FlavoredSubclassCodeGen;
 import net.globulus.easyflavor.processor.codegen.Input;
 import net.globulus.easyflavor.processor.util.FrameworkUtil;
+import net.globulus.easyflavor.processor.util.Pair;
 import net.globulus.easyflavor.processor.util.ProcessorLog;
 import net.globulus.mmap.MergeManager;
 import net.globulus.mmap.MergeSession;
-import net.globulus.mmap.Sink;
-import net.globulus.mmap.Source;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -75,27 +80,53 @@ public class Processor extends AbstractProcessor {
 			return true;
 		}
 
-		boolean shouldMerge = roundEnv.getElementsAnnotatedWith(Source.class).isEmpty();
-		boolean foundSink = !roundEnv.getElementsAnnotatedWith(Sink.class).isEmpty();
+		Boolean shouldMerge = null;
+		Boolean foundSink = null;
+		Boolean kotlinExt = null;
+		for (Element element : roundEnv.getElementsAnnotatedWith(EasyFlavorConfig.class)) {
+			EasyFlavorConfig annotation = element.getAnnotation(EasyFlavorConfig.class);
+			if (annotation.source() && shouldMerge == null) {
+				shouldMerge = false;
+			}
+			if (annotation.sink() && foundSink == null) {
+				foundSink = true;
+			}
+			if (annotation.kotlinExt() && kotlinExt == null) {
+				kotlinExt = true;
+			}
+		}
 
 		for (Element element : roundEnv.getElementsAnnotatedWith(Flavorable.class)) {
 			if (!isValidFlavorable(element)) {
 				continue;
 			}
-			Flavorable annotation = element.getAnnotation(Flavorable.class);
+			List<List<String>> constructors;
+ 			List<FlavorInjectMethod> flavorInjectMethods;
+			if (element.getKind() == ElementKind.CLASS) {
+				TypeElement typeElement = (TypeElement) element;
+				flavorInjectMethods = analyzeFlavorInjects(typeElement);
+				constructors = analyzeConstructors(typeElement);
+			} else {
+				flavorInjectMethods = Collections.emptyList();
+				constructors = Collections.emptyList();
+			}
 			String type = element.asType().toString();
 			mFlavorables.add(type);
-			mFis.add(new FlavorableInterface(type, annotation.proxied()));
+			mFis.add(new FlavorableInterface(
+					new ExposedClass(type, constructors),
+					element.getKind() == ElementKind.INTERFACE,
+					flavorInjectMethods
+			));// annotation.proxied()));
 		}
 
 		for (Element element : roundEnv.getElementsAnnotatedWith(Flavored.class)) {
-			if (!isValidFlavoredElement(element)) {
+			if (!isValidFlavoredClass(element)) {
 				continue;
 			}
 			mFlavoreds.add(element);
 		}
 
-		final boolean shouldMergeResolution = shouldMerge;
+		final boolean shouldMergeResolution = (shouldMerge == null);
 		Input input = new Input(mFlavorables, mFis);
 //		ProcessorLog.warn(null, "should merge " + shouldMergeResolution);
 		MergeManager<Input> mergeManager = new MergeManager<Input>(mFiler, mTimestamp,
@@ -130,8 +161,8 @@ public class Processor extends AbstractProcessor {
 //			ProcessorLog.warn(element, "Found flavorable class " + flavorableClass);
 			FlavorableInterface fi = null;
 			for (FlavorableInterface f : input.fis) {
-//				ProcessorLog.warn(null, "Found mFis class " + f.flavorMap);
-				if (f.flavorableClass.equals(flavorableClass)) {
+//				ProcessorLog.warn(null, "Found mFis class " + f.flavorSubclassesMap);
+				if (f.flavorableClass.name.equals(flavorableClass)) {
 					fi = f;
 					break;
 				}
@@ -142,11 +173,20 @@ public class Processor extends AbstractProcessor {
 				ProcessorLog.error(element, "flavors array cannot be empty!");
 				return false;
 			}
-			fi.addFlavors(element.asType().toString(), flavors);
+			fi.addFlavorSubclass(
+					new ExposedClass(element.asType().toString(), analyzeConstructors((TypeElement) element)),
+					flavors);
 		}
 
-		if (foundSink) {
+		if (foundSink != null) {
 //			ProcessorLog.warn(null, "WRITING OUTPUT");
+			FlavoredSubclassCodeGen flavoredSubclassCodeGen = new FlavoredSubclassCodeGen();
+			for (FlavorableInterface fi : input.fis) {
+				for (String flavor : fi.getSubclassFlavors()) {
+					ExposedClass flavorSubclass = flavoredSubclassCodeGen.generate(mFiler, fi, flavor);
+					fi.addFlavorSubclass(flavorSubclass, flavor);
+				}
+			}
 			new EasyFlavorCodeGen().generate(mFiler, input);
 			mWroteOutput = true;
 		} else {
@@ -154,7 +194,14 @@ public class Processor extends AbstractProcessor {
 			mergeSession.writeMergeFiles(input);
 //			ProcessorLog.warn(null, "AFTER MERGE 2");
 		}
+
 		return true;
+	}
+
+	private List<List<String>> analyzeConstructors(TypeElement typeElement) {
+		List<List<String>> constructors = new ArrayList<>();
+
+		return constructors;
 	}
 
 	private boolean isValidFlavorable(Element element) {
@@ -162,6 +209,11 @@ public class Processor extends AbstractProcessor {
 			if (element.getModifiers().contains(Modifier.PRIVATE)) {
 				ProcessorLog.error(element, "The private type %s is annotated with @%s. "
 								+ "Private types are not supported because of lacking visibility.",
+						element.getSimpleName(), Flavorable.class.getSimpleName());
+				return false;
+			} else if (element.getModifiers().contains(Modifier.FINAL)) {
+				ProcessorLog.error(element, "The final type %s is annotated with @%s. "
+								+ "Final types are not supported because of lacking extensibility.",
 						element.getSimpleName(), Flavorable.class.getSimpleName());
 				return false;
 			} else {
@@ -176,7 +228,74 @@ public class Processor extends AbstractProcessor {
 		}
 	}
 
-	private boolean isValidFlavoredElement(Element element) {
+	private List<FlavorInjectMethod> analyzeFlavorInjects(TypeElement element) {
+		List<Pair<ExposedMethod, FlavorInject>> flavorInjects = new ArrayList<>();
+		List<Pair<ExposedMethod, Flavored>> flavoreds = new ArrayList<>();
+		for (Element enclosed : element.getEnclosedElements()) {
+			FlavorInject flavorInject = enclosed.getAnnotation(FlavorInject.class);
+			if (flavorInject != null && isValidFlavorInject(enclosed)) {
+				flavorInjects.add(new Pair<>(new ExposedMethod(enclosed), flavorInject));
+				continue;
+			}
+			Flavored flavored = enclosed.getAnnotation(Flavored.class);
+			if (flavored != null && isValidFlavoredMethod(enclosed)) {
+				flavoreds.add(new Pair<>(new ExposedMethod(enclosed), flavored));
+			}
+		}
+		List<FlavorInjectMethod> flavorInjectMethods = new ArrayList<>();
+		for (Pair<ExposedMethod, FlavorInject> flavorInject : flavorInjects) {
+			Map<String, ExposedMethod> flavoredMethods = new HashMap<>();
+			ExposedMethod original = flavorInject.first;
+			for (Pair<ExposedMethod, Flavored> flavored : flavoreds) {
+				ExposedMethod other = flavored.first;
+				if (other.isEquivalentTo(original) && other.isNamedLike(original)) {
+					for (String flavor : flavored.second.flavors()) {
+						flavoredMethods.put(flavor, other);
+					}
+				}
+			}
+			flavorInjectMethods.add(new FlavorInjectMethod(flavorInject.second.mode(), original, flavoredMethods));
+		}
+		return flavorInjectMethods;
+	}
+
+	private boolean isValidFlavorInject(Element element) {
+		if (element.getKind() != ElementKind.CONSTRUCTOR && element.getKind() != ElementKind.METHOD) {
+			ProcessorLog.error(element,
+					"Element %s is annotated with @%s but is not a constructor or a method." +
+							" Only constructors and methods are supported",
+					element.getSimpleName(), FlavorInject.class.getSimpleName());
+			return false;
+		}
+		if (element.getModifiers().contains(Modifier.STATIC) || element.getModifiers().contains(Modifier.FINAL)) {
+			ProcessorLog.error(element,
+					"Element %s is annotated with @%s but is final or static." +
+							" All methods must be non-static and open.",
+					element.getSimpleName(), FlavorInject.class.getSimpleName());
+			return false;
+		}
+		return true;
+	}
+
+	private boolean isValidFlavoredMethod(Element element) {
+		if (element.getKind() != ElementKind.METHOD) {
+			ProcessorLog.error(element,
+					"Element %s is annotated with @%s but is not a method." +
+							" Only methods are supported",
+					element.getSimpleName(), FlavorInject.class.getSimpleName());
+			return false;
+		}
+		if (element.getModifiers().contains(Modifier.STATIC) || element.getModifiers().contains(Modifier.PRIVATE)) {
+			ProcessorLog.error(element,
+					"Element %s is annotated with @%s but is private or static." +
+							" All methods must be non-static and non-private.",
+					element.getSimpleName(), FlavorInject.class.getSimpleName());
+			return false;
+		}
+		return true;
+	}
+
+	private boolean isValidFlavoredClass(Element element) {
 		if (element.getKind() == ElementKind.CLASS) {
 			if (element.getModifiers().contains(Modifier.PRIVATE)) {
 				ProcessorLog.error(element, "The private class %s is annotated with @%s. "
@@ -186,12 +305,8 @@ public class Processor extends AbstractProcessor {
 			} else {
 				return true;
 			}
-		} else {
-			ProcessorLog.error(element,
-					"Element %s is annotated with @%s but is not a class. Only classes are supported.",
-					element.getSimpleName(), Flavored.class.getSimpleName());
-			return false;
 		}
+		return false;
 	}
 
 	private String getFlavorableSupertype(Element element, List<String> flavorables) {

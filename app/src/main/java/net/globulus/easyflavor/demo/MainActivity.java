@@ -22,6 +22,6 @@ public class MainActivity extends AppCompatActivity {
                 Log.e("CALLBACK",
                         "Callback value: " + ((v != null) ? v.toString() : "null"))
         );
-        EasyFlavor.get(Test.class).i().a();
+        EasyFlavor.get(TestImpl.class).a();
     }
 }

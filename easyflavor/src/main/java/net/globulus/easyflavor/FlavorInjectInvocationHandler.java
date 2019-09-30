@@ -2,8 +2,6 @@ package net.globulus.easyflavor;
 
 import net.globulus.easyflavor.annotation.FlavorInject;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
@@ -26,25 +24,25 @@ final class FlavorInjectInvocationHandler<T> implements InvocationHandler {
         if (annotation != null && flavorInstance != null) {
             FlavorInject.Mode mode = annotation.mode();
 
-            if (mode == FlavorInject.Mode.BEFORE || mode == FlavorInject.Mode.BEFORE_SUPER) {
+            if (mode == FlavorInject.Mode.BEFORE /*|| mode == FlavorInject.Mode.BEFORE_SUPER*/) {
                 result = method.invoke(flavorInstance, args);
             }
 
             Object realResult;
-            if (mode.isSuper()) {
-                Constructor<MethodHandles.Lookup> constructor =
-                        MethodHandles.Lookup.class.getDeclaredConstructor(Class.class, int.class);
-                constructor.setAccessible(true);
-                Object[] methodArgs = (args != null) ? args : new Object[0];
-                realResult = constructor.newInstance(realClass, MethodHandles.Lookup.PRIVATE)
-                        .unreflectSpecial(method, realClass)
-                        .bindTo(flavorInstance)
-                        .invokeWithArguments(methodArgs);
-            } else {
+//            if (mode.isSuper()) {
+//                Constructor<MethodHandles.Lookup> constructor =
+//                        MethodHandles.Lookup.class.getDeclaredConstructor(Class.class, int.class);
+//                constructor.setAccessible(true);
+//                Object[] methodArgs = (args != null) ? args : new Object[0];
+//                realResult = constructor.newInstance(realClass, MethodHandles.Lookup.PRIVATE)
+//                        .unreflectSpecial(method, realClass)
+//                        .bindTo(flavorInstance)
+//                        .invokeWithArguments(methodArgs);
+//            } else {
                 realResult = realMethod.invoke(realInstance, args);
-            }
+//            }
 
-            if (mode == FlavorInject.Mode.AFTER || mode == FlavorInject.Mode.AFTER_SUPER) {
+            if (mode == FlavorInject.Mode.AFTER /*|| mode == FlavorInject.Mode.AFTER_SUPER*/) {
                 result = method.invoke(flavorInstance, args);
             }
 
