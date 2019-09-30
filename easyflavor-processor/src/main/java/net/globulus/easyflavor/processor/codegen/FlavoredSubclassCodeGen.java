@@ -46,6 +46,14 @@ public class FlavoredSubclassCodeGen {
                         extendsType, implementsType)
                         .emitEmptyLine();
 
+                for (ExposedMethod constructor : fi.flavorableClass.constructors) {
+                    jw.beginMethod("", className, EnumSet.of(Modifier.PUBLIC),
+                            constructor.params.toArray(new String[0]))
+                            .emitStatement("super(%s)", String.join(", ", constructor.getParamNames()))
+                            .endMethod()
+                            .emitEmptyLine();
+                }
+
                for (FlavorInjectMethod method : fi.flavorInjectMethods) {
                    ExposedMethod flavorMethod = method.flavoredMethods.get(flavor);
                    if (flavorMethod == null) {

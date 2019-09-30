@@ -6,9 +6,9 @@ import java.util.List;
 public class ExposedClass implements Serializable {
 
     public final String name;
-    public final List<List<String>> constructors; // public constructors
+    public final List<ExposedMethod> constructors; // public constructors
 
-    public ExposedClass(String name, List<List<String>> constructors) {
+    public ExposedClass(String name, List<ExposedMethod> constructors) {
         this.name = name;
         this.constructors = constructors;
     }

@@ -22,6 +22,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
@@ -100,7 +102,7 @@ public class Processor extends AbstractProcessor {
 			if (!isValidFlavorable(element)) {
 				continue;
 			}
-			List<List<String>> constructors;
+			List<ExposedMethod> constructors;
  			List<FlavorInjectMethod> flavorInjectMethods;
 			if (element.getKind() == ElementKind.CLASS) {
 				TypeElement typeElement = (TypeElement) element;
@@ -198,12 +200,6 @@ public class Processor extends AbstractProcessor {
 		return true;
 	}
 
-	private List<List<String>> analyzeConstructors(TypeElement typeElement) {
-		List<List<String>> constructors = new ArrayList<>();
-
-		return constructors;
-	}
-
 	private boolean isValidFlavorable(Element element) {
 		if (element.getKind() == ElementKind.INTERFACE || element.getKind() == ElementKind.CLASS) {
 			if (element.getModifiers().contains(Modifier.PRIVATE)) {
@@ -257,6 +253,18 @@ public class Processor extends AbstractProcessor {
 			flavorInjectMethods.add(new FlavorInjectMethod(flavorInject.second.mode(), original, flavoredMethods));
 		}
 		return flavorInjectMethods;
+	}
+
+	private List<ExposedMethod> analyzeConstructors(TypeElement element) {
+		List<ExposedMethod> constructors = new ArrayList<>();
+		for (Element enclosed : element.getEnclosedElements()) {
+			if (enclosed.getKind() != ElementKind.CONSTRUCTOR
+					|| !enclosed.getModifiers().contains(Modifier.PUBLIC)) {
+				continue;
+			}
+			constructors.add(new ExposedMethod(enclosed, true));
+		}
+		return constructors;
 	}
 
 	private boolean isValidFlavorInject(Element element) {

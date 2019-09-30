@@ -23,6 +23,10 @@ public class ExposedMethod implements Serializable {
     public final List<String> thrown;
 
     public ExposedMethod(Element element) {
+        this(element, false);
+    }
+
+    public ExposedMethod(Element element, boolean boxParamTypes) {
         ExecutableType method = (ExecutableType) element.asType();
         TypeElement declaringClass = (TypeElement) element.getEnclosingElement();
         this.name = element.getSimpleName().toString();
@@ -32,8 +36,12 @@ public class ExposedMethod implements Serializable {
         this.params = new ArrayList<>();
         int count = 0;
         for (TypeMirror param : method.getParameterTypes()) {
-            this.params.add(param.toString());
-            String[] components = param.toString().toLowerCase().split("\\.");
+            String paramType = param.toString();
+            if (boxParamTypes) {
+                paramType = mapPrimitiveToBoxed(paramType);
+            }
+            this.params.add(paramType);
+            String[] components = paramType.toLowerCase().split("\\.");
             String paramName = components[components.length - 1];
             if (paramName.endsWith(">")) {
                 paramName = paramName.substring(0, paramName.length() - 1);
@@ -47,13 +55,42 @@ public class ExposedMethod implements Serializable {
                 );
     }
 
-    public boolean isEquivalentTo(ExposedMethod other) {
+    public List<String> getParamTypes() {
+        List<String> paramTypes = new ArrayList<>();
+        for (int i = 0; i < params.size(); i += 2) {
+            paramTypes.add(params.get(i));
+        }
+        return paramTypes;
+    }
+
+    public List<String> getParamNames() {
+        List<String> paramTypes = new ArrayList<>();
+        for (int i = 1; i < params.size(); i += 2) {
+            paramTypes.add(params.get(i));
+        }
+        return paramTypes;
+    }
+
+    boolean isEquivalentTo(ExposedMethod other) {
         return returnType.equals(other.returnType)
                 && params.equals(other.params)
                 && thrown.equals(other.thrown);
     }
 
-    public boolean isNamedLike(ExposedMethod other) {
+    boolean isNamedLike(ExposedMethod other) {
         return name.toLowerCase().contains(other.name.toLowerCase());
+    }
+
+    private String mapPrimitiveToBoxed(String type) {
+        switch (type) {
+            case "int": return "Integer";
+            case "byte": return "Byte";
+            case "short": return "Short";
+            case "long": return "Long";
+            case "float": return "Float";
+            case "double": return "Double";
+            case "boolean": return "Boolean";
+            default: return type;
+        }
     }
 }

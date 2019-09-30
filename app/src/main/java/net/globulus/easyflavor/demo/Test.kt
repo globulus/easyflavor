@@ -8,6 +8,15 @@ import net.globulus.easyflavor.demomidlib.AppFlavors
 
 @Flavorable
 open class TestImpl  {
+
+    constructor(b: String) {
+
+    }
+
+    constructor(a: Int, b: String) {
+        Log.e("AAAA", "${this::class.java.simpleName}, $a, $b")
+    }
+
     @FlavorInject(mode = FlavorInject.Mode.REPLACE)
     open fun a() {
         Log.e("AAAA", "ORIG TEST")
