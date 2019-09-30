@@ -7,6 +7,7 @@ import net.globulus.easyflavor.annotation.Flavored;
 import net.globulus.easyflavor.processor.codegen.EasyFlavorCodeGen;
 import net.globulus.easyflavor.processor.codegen.FlavoredSubclassCodeGen;
 import net.globulus.easyflavor.processor.codegen.Input;
+import net.globulus.easyflavor.processor.codegen.KotlinExtCodeGen;
 import net.globulus.easyflavor.processor.util.FrameworkUtil;
 import net.globulus.easyflavor.processor.util.Pair;
 import net.globulus.easyflavor.processor.util.ProcessorLog;
@@ -190,6 +191,10 @@ public class Processor extends AbstractProcessor {
 				}
 			}
 			new EasyFlavorCodeGen().generate(mFiler, input);
+
+			if (kotlinExt != null) {
+				new KotlinExtCodeGen().generate(mFiler, input);
+			}
 			mWroteOutput = true;
 		} else {
 //			ProcessorLog.warn(null, "BEFORE MERGE 2");

@@ -46,4 +46,13 @@ public class FlavorableInterface implements Serializable {
         set.removeAll(flavorSubclasses.keySet());
         return set;
     }
+
+    public Set<String> getAllFlavors() {
+        Set<String> set = new HashSet<>();
+        for (FlavorInjectMethod method : flavorInjectMethods) {
+            set.addAll(method.getFlavors());
+        }
+        set.addAll(flavorSubclasses.keySet());
+        return set;
+    }
 }

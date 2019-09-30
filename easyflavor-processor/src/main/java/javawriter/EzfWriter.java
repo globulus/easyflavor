@@ -67,6 +67,14 @@ public class EzfWriter implements Closeable {
 
   /** Emit a package declaration and empty line. */
   public EzfWriter emitPackage(String packageName) throws IOException {
+   return emitPackage(packageName, true);
+  }
+
+  public EzfWriter emitPackageKt(String packageName) throws IOException {
+    return emitPackage(packageName, false);
+  }
+
+  private EzfWriter emitPackage(String packageName, boolean java) throws IOException {
     if (this.packagePrefix != null) {
       throw new IllegalStateException();
     }
@@ -75,7 +83,10 @@ public class EzfWriter implements Closeable {
     } else {
       out.write("package ");
       out.write(packageName);
-      out.write(";\n\n");
+      if (java) {
+        out.write(";");
+      }
+      out.write("\n\n");
       this.packagePrefix = packageName + ".";
     }
     return this;
@@ -617,6 +628,41 @@ public class EzfWriter implements Closeable {
     return this;
   }
 
+  public EzfWriter beginFunctionKt(String returnType,
+                                   String name,
+                                   Set<Modifier> modifiers,
+                                   List<String> genericTypes,
+                                   String... parameters) throws IOException {
+    indent();
+    emitModifiers(modifiers);
+    out.write("fun ");
+    if (genericTypes != null) {
+      out.write("<");
+      out.write(String.join(", ", genericTypes));
+      out.write("> ");
+    }
+    out.write(name);
+    out.write("(");
+    if (parameters != null) {
+      for (int p = 0; p < parameters.length;) {
+        if (p != 0) {
+          out.write(", ");
+        }
+        emitCompressedType(parameters[p++]);
+        out.write(": ");
+        emitCompressedType(parameters[p++]);
+      }
+    }
+    out.write(")");
+    if (returnType != null) {
+      out.write(": ");
+      emitCompressedType(returnType);
+    }
+    out.write(" {\n");
+    scopes.push(Scope.NON_ABSTRACT_METHOD);
+    return this;
+  }
+
   private boolean containsArray(Collection<?> values) {
     for (Object value : values) {
       if (value instanceof Object[]) {
@@ -660,6 +706,14 @@ public class EzfWriter implements Closeable {
    *     contain trailing semicolon.
    */
   public EzfWriter emitStatement(String pattern, Object... args) throws IOException {
+   return emitStatement(pattern, true, args);
+  }
+
+  public EzfWriter emitStatementKt(String pattern, Object... args) throws IOException {
+    return emitStatement(pattern, false, args);
+  }
+
+  private EzfWriter emitStatement(String pattern, boolean java, Object... args) throws IOException {
     checkInMethod();
     String[] lines = String.format(pattern, args).split("\n", -1);
     indent();
@@ -669,9 +723,13 @@ public class EzfWriter implements Closeable {
       hangingIndent();
       out.write(lines[i]);
     }
-    out.write(";\n");
+    if (java) {
+      out.write(";");
+    }
+    out.write("\n");
     return this;
   }
+
 
   /**
    * @param controlFlow the control flow construct and its code, such as "if (foo == 5)". Shouldn't

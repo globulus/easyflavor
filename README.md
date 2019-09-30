@@ -171,7 +171,7 @@ EasyFlavor supports hierarchical modules, meaning that it can [generate the fina
 Because of this, it's **necessary to do the following**:
 
 1. Annotate one class (just one, any one) in your *topmost* module with *@EasyFlavorConfig(source = true)*.
-2. Annoate one class (again, just one) in your *bottommost* module(s) with *@EasyFlavorConfig(sink = true)*.
+2. Annotate one class (again, just one) in your *bottommost* module(s) with *@EasyFlavorConfig(sink = true)*.
 
 That's it! These annotations will tell the processor how's your architecture oriented and allow it to generate all of its files so that no conflicts arise.
 
