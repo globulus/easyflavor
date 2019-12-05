@@ -23,7 +23,7 @@ public final class EasyFlavor {
     }
 
     @SuppressWarnings("unchecked")
-    public static  <T> T get(Class<? super T> flavorableClass, Object... args) {
+    public static <T> T get(Class<? super T> flavorableClass, Object... args) {
         return proxyResolver.get(flavorableClass, args);
     }
 

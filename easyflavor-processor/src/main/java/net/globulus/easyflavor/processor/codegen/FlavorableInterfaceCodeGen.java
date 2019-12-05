@@ -5,6 +5,8 @@ import net.globulus.easyflavor.processor.ExposedMethod;
 import net.globulus.easyflavor.processor.FlavorableInterface;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javawriter.EzfWriter;
@@ -44,6 +46,8 @@ public class FlavorableInterfaceCodeGen implements CodeGen<FlavorableInterface> 
         String name = exposedClass.name;
         boolean first = true;
         ExposedMethod emptyConstr = null;
+        Map<Integer, Boolean> fullyNulled = new HashMap<>();
+
         // Find empty constructor first
         for (ExposedMethod constructor : exposedClass.constructors) {
             if (constructor.params.isEmpty()) {
@@ -54,6 +58,7 @@ public class FlavorableInterfaceCodeGen implements CodeGen<FlavorableInterface> 
                 break;
             }
         }
+
         for (ExposedMethod constructor : exposedClass.constructors) {
             if (constructor == emptyConstr) {
                 continue; // Already wrote this one
@@ -62,25 +67,74 @@ public class FlavorableInterfaceCodeGen implements CodeGen<FlavorableInterface> 
             StringBuilder casts = new StringBuilder();
             int count = 0;
             for (String paramType : constructor.getParamTypes()) {
-                if (count > 0) {
-                    checks.append(" && ");
-                    casts.append(", ");
-                }
+                handleCountCheck(checks, casts, count);
                 checks.append("args[").append(count).append("] instanceof ").append(paramType);
                 casts.append("(").append(paramType).append(") args[").append(count).append("]");
                 count++;
             }
-            if (first) {
-                jw.beginControlFlow("if (%s)", checks.toString());
-                first = false;
-            } else {
-                jw.nextControlFlow("else if (%s)", checks.toString());
-            }
-            jw.emitStatement("flavorInstance = new %s(%s)", name, casts.toString());
+            first = writeConstructorStatement(jw, name, first, checks, casts);
         }
+
+        for (ExposedMethod constructor : exposedClass.constructors) {
+            if (constructor == emptyConstr) {
+                continue; // Already wrote this one
+            }
+            List<String> paramTypes = constructor.getParamTypes();
+            int size = paramTypes.size();
+            for (int i = 0; i < size; i++) {
+                if (i == 0) {
+                    if (Boolean.TRUE.equals(fullyNulled.get(size))) {
+                        continue;
+                    } else {
+                        fullyNulled.put(size, true);
+                    }
+                }
+
+                StringBuilder checks = new StringBuilder();
+                StringBuilder casts = new StringBuilder();
+                int count = 0;
+                for (int j = 0; j < i; j++) {
+                    String paramType = paramTypes.get(j);
+                    handleCountCheck(checks, casts, count);
+                    checks.append("args[").append(count).append("] instanceof ").append(paramType);
+                    casts.append("(").append(paramType).append(") args[").append(count).append("]");
+                    count++;
+                }
+                for (int j = i; j < size; j++) {
+                    handleCountCheck(checks, casts, count);
+                    checks.append("args[").append(count).append("] == null");
+                    casts.append("null");
+                    count++;
+                }
+                first = writeConstructorStatement(jw, name, first, checks, casts);
+            }
+        }
+
+
         jw.nextControlFlow("else")
                 .emitStatement("throw new IllegalArgumentException(\"Cannot find constructor" +
                         " with provided args: \" + args.toString())")
                 .endControlFlow();
+    }
+
+    private void handleCountCheck(StringBuilder checks, StringBuilder casts, int count) {
+        if (count > 0) {
+            checks.append(" && ");
+            casts.append(", ");
+        }
+    }
+
+    private boolean writeConstructorStatement(EzfWriter jw,
+                                              String name,
+                                              boolean first,
+                                              StringBuilder checks,
+                                              StringBuilder casts) throws IOException {
+        if (first) {
+            jw.beginControlFlow("if (%s)", checks.toString());
+        } else {
+            jw.nextControlFlow("else if (%s)", checks.toString());
+        }
+        jw.emitStatement("flavorInstance = new %s(%s)", name, casts.toString());
+        return false;
     }
 }
