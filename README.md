@@ -10,6 +10,8 @@ The architecture enforced by the library fits neatly into popular options, such 
 
 The library works with **Kotlin** as well as Java, as illustrated by the [demo app](app/). It also has the ability to generate additional [Kotlin extensions code](#kotlin-extensions).
 
+**AndroidX VieModels** are fully supported via [*flavoredViewModel* property delegate](#viewmodel-support).
+
 EasyFlavor uses [MMAP](https://github.com/globulus/mmap) to allow for multi-module annotation processing. It relies purely on generated code, and not reflection, meaning that there's no performance overhead is introduced.
 
 ### Installation
@@ -267,3 +269,30 @@ class SomeClassInModule
 
 Specifying unique names for your modules allows you to use these functions from all your modules, regardless of their hierarchy. Omitting the module will make it so that Kotlin files aren't generated (if, e.g, you only use Java in your project).
 
+### ViewModel Support
+
+If your Flavorable class extends [ViewModel](https://developer.android.com/topic/libraries/architecture/viewmodel), you can inject it via the **flavoredViewModel** property delegate:
+
+```kotlin
+@Flavorable
+open class MainActivityViewModel : ViewModel() {
+
+  @FlavorInject
+  open fun getTitle() = ""
+
+  @Flavored(flavors = [AppFlavors.FREE])
+  internal fun getTitleFree() = "FREE"
+
+  @Flavored(flavors = [AppFlavors.FULL])
+  internal fun getTitleFull() = "FULL"
+}
+```
+
+```kotlin
+
+class MainActivity : AppCompatActivity() {
+
+  private val viewModel: MainActivityViewModel by flavoredViewModel()
+```
+
+*flavoredViewModel* will internally use the *ViewModelProvider* to instantiate the appropriate flavored instance for your ViewModel. Note that you can pass any arguments to *flavoredViewModel* as you would for *EasyFlavor.get*, except the class, as it's inferred automatically.
