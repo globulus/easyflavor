@@ -1,2 +1,3 @@
 include ':app', ':easyflavor', ':easyflavor-processor', ':easyflavor-annotations', ':demolib', ':demomidlib'
 rootProject.name='EasyFlavorDemo'
+include ':easyflavor-android'

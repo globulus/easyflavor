@@ -18,11 +18,11 @@ EasyFlavor is hosted on JCenter - just add the EasyFlavor dependency and annotat
 
 ```gradle
 dependencies {
-   implementation 'net.globulus.easyflavor:easyflavor:1.0.5'
-   implementation 'net.globulus.easyflavor:easyflavor-annotations:1.0.5'
-   annotationProcessor 'net.globulus.easyflavor:easyflavor-processor:1.0.5'
+   implementation 'net.globulus.easyflavor:easyflavor:1.0.6'
+   implementation 'net.globulus.easyflavor:easyflavor-annotations:1.0.6'
+   annotationProcessor 'net.globulus.easyflavor:easyflavor-processor:1.0.6'
    // and/or
-   kapt 'net.globulus.easyflavor:easyflavor-processor:1.0.5'
+   kapt 'net.globulus.easyflavor:easyflavor-processor:1.0.6'
 }
 ```
 
