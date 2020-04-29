@@ -10,7 +10,7 @@ The architecture enforced by the library fits neatly into popular options, such 
 
 The library works with **Kotlin** as well as Java, as illustrated by the [demo app](app/). It also has the ability to generate additional [Kotlin extensions code](#kotlin-extensions).
 
-**AndroidX VieModels** are fully supported via [*flavoredViewModel* property delegate](#viewmodel-support).
+**AndroidX ViewModels** are fully supported via [*flavoredViewModel* property delegate](#viewmodel-support).
 
 EasyFlavor uses [MMAP](https://github.com/globulus/mmap) to allow for multi-module annotation processing. It relies purely on generated code, and not reflection, meaning that there's no performance overhead is introduced.
 
@@ -57,7 +57,7 @@ For the part of code that depends on flavors, create a class or an interface and
 
 ```java
 @Flavorable
-class MainActivityViewModel {
+interface MainActivityViewModel {
     void fetchData(String collection, Callback callback);
 }
 ```
@@ -90,7 +90,7 @@ class FullMainActivityViewModel implements MainActivityViewModel {
 
 #### Option #2 - *FlavorInject* methods directly
 
-You may also specify methods in your *Flavorable* class that are replaced, prefixed or suffixed by other methods, depening on the app Flavor.
+You may also specify methods in your *Flavorable* class that are replaced, prefixed or suffixed by other methods, depending on the app Flavor.
 
 1. Annotate those methods with **@FlavorInject**, optionally specifying the execution mode (*before*, *after*, or by default *replace*).
 
@@ -164,7 +164,7 @@ class MainActivity extends Activity {
 }
 ```
 
-Note that primitive types in constructors aren't allowed given that the args list is an array of Object. For Kotlin, this isn't an issue as the processor will automatically wrap primitive types
+Note that primitive types in constructors aren't allowed given that the args list is an array of Object. For Kotlin, this isn't an issue as the processor will automatically wrap primitive types.
 
 ### Multi-module support
 
@@ -172,11 +172,10 @@ EasyFlavor supports hierarchical modules, meaning that it can [generate the fina
 
 Because of this, it's **necessary to do the following**:
 
-1. Annotate one class (just one, any one) in your *topmost* module with *@EasyFlavorConfig(source = true)*.
-2. Annotate one class (again, just one) in your *bottommost* module(s) with *@EasyFlavorConfig(sink = true)*.
+1. Annotate one class (just one, any one) in your *top-most* module with *@EasyFlavorConfig(source = true)*.
+2. Annotate one class (again, just one) in your *bottom-most* module(s) with *@EasyFlavorConfig(sink = true)*.
 
 That's it! These annotations will tell the processor how's your architecture oriented and allow it to generate all of its files so that no conflicts arise.
-
 
 ### Notes
 
@@ -271,7 +270,7 @@ Specifying unique names for your modules allows you to use these functions from 
 
 ### ViewModel Support
 
-If your Flavorable class extends [ViewModel](https://developer.android.com/topic/libraries/architecture/viewmodel), you can inject it via the **flavoredViewModel** property delegate:
+If your *@Flavorable* class extends [ViewModel](https://developer.android.com/topic/libraries/architecture/viewmodel), you can inject it via the **flavoredViewModel** property delegate:
 
 ```kotlin
 @Flavorable
@@ -296,3 +295,11 @@ class MainActivity : AppCompatActivity() {
 ```
 
 *flavoredViewModel* will internally use the *ViewModelProvider* to instantiate the appropriate flavored instance for your ViewModel. Note that you can pass any arguments to *flavoredViewModel* as you would for *EasyFlavor.get*, except the class, as it's inferred automatically.
+
+This requires the *easyflavor-android* dependency to be added:
+
+```gradle
+dependencies {
+   implementation 'net.globulus.easyflavor:easyflavor-android:1.0.6.1'
+}
+```
