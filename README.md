@@ -46,7 +46,7 @@ class MyApp extends Application {
         // FlavorResolver is a simple functional interface that returns
         // a String describing the app flavor. It's up to you to define
         // exactly how is the app flavor determined.
-        EasyConfig.setResolver(() -> (BuildConfig.FULL_VERSION) ? FULL : FREE);
+        EasyFlavor.setResolver(() -> (BuildConfig.FULL_VERSION) ? FULL : FREE);
     }
 }
 ```
