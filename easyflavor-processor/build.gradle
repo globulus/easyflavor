@@ -6,13 +6,13 @@ group='com.github.globulus'
 ext {
     PUBLISH_GROUP_ID = 'net.globulus'
     PUBLISH_ARTIFACT_ID = 'easyflavor-processor'
-    PUBLISH_VERSION = '1.0.6.5'
+    PUBLISH_VERSION = '1.0.6.6'
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(path: ':easyflavor-annotations')
-    compile 'net.globulus.mmap:mmap:1.0.1'
+    compile 'net.globulus.mmap:mmap:1.0.2'
 }
 
 sourceCompatibility = "8"
